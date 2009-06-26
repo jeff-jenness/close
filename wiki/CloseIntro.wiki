@@ -1,9 +1,6 @@
 #summary Introduction to Close project, and top-level page of Wiki
 
-[http://code.google.com/p/close/logo?linkname=logo.png]
-_Close: a systems programming language for Parrot_
-
-== Introduction ==
+= Introduction =
 
 Add your content here.
 
