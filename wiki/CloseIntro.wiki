@@ -47,7 +47,7 @@ Here's how that same example might look in "PIR style":
     }
 }}}
 
-How cool is that?^4^
+How cool is that?^3^
 
 ,,1: He's wrong: neither 4 nor 8 spaces. Try three-eighths of an inch. Using spaces assumes a monospace font, and assumes that offsets should be line-relative -- both incorrect.,,<br />
 ,,2: He's wrong: tabs, because they represent an aligned advance. (If your editor doesn't compute how far to advance based on the surrounding text, that's your problem. Tell it 3/8 inch and move on.),,<br />
