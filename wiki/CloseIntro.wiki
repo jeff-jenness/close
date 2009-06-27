@@ -46,11 +46,12 @@ Here's how that example might look in "pir style":
     }
 }}}
 
-How cool is that?
+How cool is that?^4^
 
-,,1: Neither 4 nor 8 spaces: try three-eights of an inch.,,<br />
+,,1: Neither 4 nor 8 spaces: try three-eighths of an inch.,,<br />
 ,,2: Tabs, because they represent an aligned advance.,,<br />
 ,,3: K&R makes an exception for subroutine blocks, which go at column 1.,,<br />
+,,4: It's *not!* There's a reason we moved away from coding in assembly 40+ years ago.,,<br />
 
 But wait! There's more! Because in addition to supporting objects, named parameters, variadic functions, and multiply dispatched method calls, PIR also has no control structures. Here's an example taken from the P6object::register subroutine. See if you can guess what it does:
 {{{
