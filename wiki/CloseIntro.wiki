@@ -7,7 +7,7 @@ The Parrot VM is intended to support dynamic languages, and the tools being buil
 Unfortunately, PIR is assembly language. For a processor that nobody really understands. It's not that the Parrot VM is a new processor -- porting assembly from one CPU to another is generally simple. But the Parrot model is _not_ "just another CPU," and so programming in Parrot assembly (PIR) is _not_ just learning another set of opcodes and registers. Do you know what the difference between a vtable and a method call is? Do you know what to do with a namespace? Do you know why your CPU cares about namespaces?
 
 The upshot of this is that programming in PIR offers a lot of high-level, high-abstraction, high-powered functionality, wrapped up in the guise of a crappy language. Damian Conway, in his book 
-[http://oreilly.com/catalog/9780596001735/ Perl Best Practices], talks about whether four or eight spaces are better for indentation (he's wrong^1^). He discusses whether to use tabs or spaces (he's wrong^2^). And he discusses whether to use K&R style or 1TBC (he's right, but he does it wrong^3^). But at *no* point does he ever consider the "style" the PIR represents. Here's an example of PBP style:
+[http://oreilly.com/catalog/9780596001735/ Perl Best Practices], talks about whether four or eight spaces are better for indentation^1^. He discusses whether to use tabs or spaces^2^. And he discusses whether to use K&R style or 1TBC. Here's an example of his recommended style:
 {{{
     sub words_to_num {
         my ($words) = @_;
@@ -28,30 +28,30 @@ The upshot of this is that programming in PIR offers a lot of high-level, high-a
     }
 }}}
 
-Here's how that example might look in "pir style":
+At *no* point does he ever consider the "style" that PIR represents. 
+Here's how that same example might look in "PIR style":
 {{{
     sub words_to_num {
-    my ($words) = @_;
-    # Treat each sequence of non-whitespace as a word...
-    my @words = split /\s+/, $words;
-    # Translate each word to the appropriate number...
-    my $num = $EMPTY_STR;
-    for my $word (@words) {
-    my $digit = $num_for{lc $word};
-    if (defined $digit) {
-    $num .= $digit;
-    }
-    }
-    return $num;
+        my ($words) = @_;
+        # Treat each sequence of non-whitespace as a word...
+        my @words = split /\s+/, $words;
+        # Translate each word to the appropriate number...
+        my $num = $EMPTY_STR;
+        for my $word (@words) {
+        my $digit = $num_for{lc $word};
+        if (defined $digit) {
+        $num .= $digit;
+        }
+        }
+        return $num;
     }
 }}}
 
 How cool is that?^4^
 
-,,1: Neither 4 nor 8 spaces: try three-eighths of an inch.,,<br />
-,,2: Tabs, because they represent an aligned advance.,,<br />
-,,3: K&R makes an exception for subroutine blocks, which go at column 1.,,<br />
-,,4: It's *not!* There's a reason we moved away from coding in assembly 40+ years ago.,,<br />
+,,1: He's wrong: neither 4 nor 8 spaces. Try three-eighths of an inch. Using spaces assumes a monospace font, and assumes that offsets should be line-relative -- both incorrect.,,<br />
+,,2: He's wrong: tabs, because they represent an aligned advance. (If your editor doesn't compute how far to advance based on the surrounding text, that's your problem. Tell it 3/8 inch and move on.),,<br />
+,,3: It's not cool, at all! There's a reason we moved away from coding in assembly 40+ years ago.,,<br />
 
 But wait! There's more! Because in addition to supporting objects, named parameters, variadic functions, and multiply dispatched method calls, PIR also has no control structures. Here's an example taken from the P6object::register subroutine. See if you can guess what it does:
 {{{
