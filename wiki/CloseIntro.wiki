@@ -2,12 +2,125 @@
 
 = Introduction =
 
-Add your content here.
+The Parrot VM is intended to support dynamic languages, and the tools being built around parrot reflect that. But as Dan Sugalski pointed out in his [http://www.sidhe.org/~dan/blog/archives/000435.html Parrot Post-Mortem,] not having a HLL sitting right on top of PIR means that everyone needs to program in PIR. 
 
+Unfortunately, PIR is assembly language. For a processor that nobody really understands. It's not that the Parrot VM is a new processor -- porting assembly from one CPU to another is generally simple. But the Parrot model is _not_ "just another CPU," and so programming in Parrot assembly (PIR) is _not_ just learning another set of opcodes and registers. Do you know what the difference between a vtable and a method call is? Do you know what to do with a namespace? Do you know why your CPU cares about namespaces?
 
-= Details =
+The upshot of this is that programming in PIR offers a lot of high-level, high-abstraction, high-powered functionality, wrapped up in the guise of a crappy language. Damian Conway, in his book 
+[http://oreilly.com/catalog/9780596001735/ Perl Best Practices], talks about whether four or eight spaces are better for indentation (he's wrong^1^). He discusses whether to use tabs or spaces (he's wrong^2^). And he discusses whether to use K&R style or 1TBC (he's right, but he does it wrong^3^). But at *no* point does he ever consider the "style" the PIR represents. Here's an example of PBP style:
+{{{
+    sub words_to_num {
+        my ($words) = @_;
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+        # Treat each sequence of non-whitespace as a word...
+        my @words = split /\s+/, $words;
+
+        # Translate each word to the appropriate number...
+        my $num = $EMPTY_STR;
+        for my $word (@words) {
+            my $digit = $num_for{lc $word};
+            if (defined $digit) {
+                 $num .= $digit;
+            }
+        }
+
+        return $num;
+    }
+}}}
+
+Here's how that example might look in "pir style":
+{{{
+    sub words_to_num {
+    my ($words) = @_;
+    # Treat each sequence of non-whitespace as a word...
+    my @words = split /\s+/, $words;
+    # Translate each word to the appropriate number...
+    my $num = $EMPTY_STR;
+    for my $word (@words) {
+    my $digit = $num_for{lc $word};
+    if (defined $digit) {
+    $num .= $digit;
+    }
+    }
+    return $num;
+    }
+}}}
+
+How cool is that?
+
+,,1: Neither 4 nor 8 spaces: try three-eights of an inch.,,<br />
+,,2: Tabs, because they represent an aligned advance.,,<br />
+,,3: K&R makes an exception for subroutine blocks, which go at column 1.,,<br />
+
+But wait! There's more! Because in addition to supporting objects, named parameters, variadic functions, and multiply dispatched method calls, PIR also has no control structures. Here's an example taken from the P6object::register subroutine. See if you can guess what it does:
+{{{
+    if null parentclass goto parent_done
+    $I0 = isa parentclass, 'P6protoobject'
+    if $I0 goto parent_single
+    $I0 = does parentclass, 'array'
+    if $I0 goto parent_array
+    $S0 = typeof parentclass
+    if $S0 == 'String' goto parent_string
+  parent_single:
+    self.'add_parent'(parentclass, 'to'=>parrotclass)
+    goto parent_done
+  parent_string:
+    $S0 = parentclass
+    parentclass = split ' ', $S0
+  parent_array:
+    .local pmc iter, item
+    iter = new 'Iterator', parentclass
+  parent_loop:
+    unless iter goto parent_done
+    item = shift iter
+    $S0 = item
+    $P0 = split ';', $S0
+    $I0 = elements $P0
+    eq $I0, 1, no_parent_hll
+    $S0 = shift $P0
+    goto have_parent_hll
+  no_parent_hll:
+    $S0 = hll
+  have_parent_hll:
+    $P0 = shift $P0
+    $S1 = $P0
+    $P0 = split '::', $S1
+    unshift $P0, $S0
+    $S0 = pop $P0
+    item = get_root_global $P0, $S0
+    self.'add_parent'(item, 'to'=>parrotclass)
+    goto parent_loop
+  parent_done:
+}}}
+
+Here's some code that I think does the same thing, written in Close. See if you can guess what _this_ does:
+{{{
+    if (parentclass) {
+        if (isa parentclass, 'P6protoobject') {
+            self.add_parent(parentclass, to: parrotclass);
+        }
+        else if (typeof parentclass == 'String' || does parentclass, 'array') {
+            if (typeof parentclass == 'String') {
+                parentclass = split ' ', parentclass;
+            }
+
+            foreach (pmc item: parentclass) {
+                pmc namespace = split ';', item;
+                pmc temp_hll = elements namespace == 1 ? hll : shift namespace;
+            
+                namespace = split '::', shift namespace;
+                unshift namespace, temp_hll;
+
+                str name = pop namespace;
+                self.add_parent((get_root_global namespace, name), to: parrotclass);
+            }
+        }
+        else { # Not proto object, but also not array or string.
+            self.add_parent(parentclass, to: parrotclass);
+        }            
+    }
+}}}
+
+The astute reader will notice that the line counts of PIR code and Close code are very similar. Close is not intended as an extremely high level language. Instead, Close is intended as a high-level assembler. (In fact, the working title for Close was 'hlasm'.) This is very much like C: if you understand the underlying machine architecture, it isn't very hard to intuit the sequence of machine opcodes that a particular C statement will generate.
+
+In a similar vein, Close is intended to model PIR, but with control structures that are more familiar to most programmers. The builtin functions map directly to PIR opcodes, except where those opcodes can better be modeled by grammar (if statements, loops, goto).
