@@ -1,4 +1,5 @@
 #summary Introduction to Close project, and top-level page of Wiki
+#labels Featured
 
 = Introduction =
 
