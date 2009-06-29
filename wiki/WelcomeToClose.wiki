@@ -1,7 +1,0 @@
-Close is a C-like programming language for the [http://www.parrot.org Parrot Virtual Machine]. 
-
-  * Background info about Close is at CloseIntro.
-
-  * The list of features and capabilities planned for Close is described in the [Milestones] page.
-
-  * If you're thinking about contributing, please do. There are some "nice to have" language constructs (like 'for' loops and 'switch') that still need doing, plenty of builtins to add (one for every opcode), and (as always) more test cases would rock. Check out the issue tracker for a list.
