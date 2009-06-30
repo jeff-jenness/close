@@ -1,4 +1,4 @@
 #summary One-sentence summary of this page.
-#sidebar http://code.google.com/p/close/issues/list?q=Milestone%3AWishList+OR+Priority%3ALow
+#sidebar [http://code.google.com/p/close/issues/list?q=Milestone%3AWishList+OR+Priority%3ALow]
 
 The sidebar will hopefully show items on the project wish list. If you'd like to contribute, add one of those features.
