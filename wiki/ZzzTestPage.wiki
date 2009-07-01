@@ -1,0 +1,14 @@
+#summary Useless page for playing with wiki stuff.
+
+= Introduction =
+
+This is a test page. Do whatever you want here.
+
+
+= Details =
+
+<wiki:gadget
+  border="0" 
+  height="200"
+  url="http://code.google.com/svn/trunk/src/GoogleCode/gadget-issue_report.xml"
+  /> 
