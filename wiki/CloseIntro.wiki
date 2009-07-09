@@ -1,128 +1,91 @@
-#summary Introduction to Close project, and top-level page of Wiki
+#summary Introduction to Close programming
 #labels Featured
+<wiki:toc />
+
+= Preface = 
+
+The [http://www.parrot.org Parrot Virtual Machine] (Parrot VM or PVM) is intended to support dynamic languages, and the tools being built on and around it support that goal. But as Dan Sugalski poined out in his [http://www.sidhe.org/~dan/blog/archives/000435.html Parrot Post-Mortem], not having a high-level language (HLL) sitting right on top of PIR means that everyone needs to program in PIR.
+
+Unfortunately, PIR is assembly language. For a processor that nobody really understands. It's not that the PVM is a new processor -- porting assembly from one CPU to another is generally a simple task. But the Parrot model is _not_ "just another CPU," and so programming in PIR is _not_ just learning another set of slightly-different opcodes and registers. Do you know what the difference between a vtable and a method call is? Do you know what to do with a namespace? Do you know why the _CPU_ cares about namespaces?
+
+*Close* is a general-purpose programming language modeled on C. Where possible, it has the same syntax, or the same "style," that C does. Like C, Close is not a "very high level" language, nor is it a "big" language. Instead, it aims to serve the same role that C serves in systems programming: provide an abstract syntax that gives access to low-level functionality.
+
+This part of the Close wiki is intended to help you, the reader, understand how to program in Close. It contains a tutorial section intended to get you up and working as quickly as possible, with separate chapters for major themes in the language.
+ 
+This is not an introduction to programming. It is an introduction to programming Close on the Parrot VM. You are assumed to know about things like variables, loops, subroutines, statements, objects, and the like.
+ 
+Close is an evolving language. As of this writing (July, 2009) major parts of the language are missing or unimplemented. Thus, you may encounter sections that list "planned" behavior, or that make statements that simply aren't true. Please submit tickets for the latter. Of course, you are welcome to help implement the former.
 
 = Introduction =
 
-The Parrot VM is intended to support dynamic languages, and the tools being built around parrot reflect that. But as Dan Sugalski pointed out in his [http://www.sidhe.org/~dan/blog/archives/000435.html Parrot Post-Mortem,] not having a HLL sitting right on top of PIR means that everyone needs to program in PIR. 
-
-Unfortunately, PIR is assembly language. For a processor that nobody really understands. It's not that the Parrot VM is a new processor -- porting assembly from one CPU to another is generally simple. But the Parrot model is _not_ "just another CPU," and so programming in Parrot assembly (PIR) is _not_ just learning another set of opcodes and registers. Do you know what the difference between a vtable and a method call is? Do you know what to do with a namespace? Do you know why your CPU cares about namespaces?
-
-The upshot of this is that programming in PIR offers a lot of high-level, high-abstraction, high-powered functionality, wrapped up in the guise of a crappy language. Damian Conway, in his book 
-[http://oreilly.com/catalog/9780596001735/ Perl Best Practices], talks about whether four or eight spaces are better for indentation^1^. He discusses whether to use tabs or spaces^2^. And he discusses whether to use K&R style or 1TBC. Here's an example of his recommended style:
+We begin with a quick introduction to Close. The aim is to show the essential elements of the language in a "real-world" fashion. So here is some code:
 {{{
-    sub words_to_num {
-        my ($words) = @_;
+namespace PCT::Node;
 
-        # Treat each sequence of non-whitespace as a word...
-        my @words = split /\s+/, $words;
+int serial_number = 10;
 
-        # Translate each word to the appropriate number...
-        my $num = $EMPTY_STR;
-        for my $word (@words) {
-            my $digit = $num_for{lc $word};
-            if (defined $digit) {
-                 $num .= $digit;
-            }
+class PCT::Node
+    extends ::parrot::Capture
+    :phylum(P6object)
+{
+    pmc attr(str attrname, pmc value, int has_value, pmc default = new Undef)
+        :method
+    {
+        if (has_value) {
+            return self[attrname] = value;
         }
+        else {
+            value = self[attrname];
 
-        return $num;
-    }
-}}}
-
-At *no* point does he ever consider the "style" that PIR represents. 
-Here's how that same example might look in "PIR style":
-{{{
-    sub words_to_num {
-        my ($words) = @_;
-        # Treat each sequence of non-whitespace as a word...
-        my @words = split /\s+/, $words;
-        # Translate each word to the appropriate number...
-        my $num = $EMPTY_STR;
-        for my $word (@words) {
-        my $digit = $num_for{lc $word};
-        if (defined $digit) {
-        $num .= $digit;
-        }
-        }
-        return $num;
-    }
-}}}
-
-How cool is that?^3^
-
-,,1: He's wrong: neither 4 nor 8 spaces. Try three-eighths of an inch. Using spaces assumes a monospace font, and assumes that offsets should be line-relative -- both incorrect.,,<br />
-,,2: He's wrong: tabs, because they represent an aligned advance. (If your editor doesn't compute how far to advance based on the surrounding text, that's your problem. Tell it 3/8 inch and move on.),,<br />
-,,3: It's not cool, at all! There's a reason we moved away from coding in assembly 40+ years ago.,,<br />
-
-But wait! There's more! Because in addition to supporting objects, named parameters, variadic functions, and multiply dispatched method calls, PIR also has no control structures. Here's an example taken from the P6object::register subroutine. See if you can guess what it does:
-{{{
-    if null parentclass goto parent_done
-    $I0 = isa parentclass, 'P6protoobject'
-    if $I0 goto parent_single
-    $I0 = does parentclass, 'array'
-    if $I0 goto parent_array
-    $S0 = typeof parentclass
-    if $S0 == 'String' goto parent_string
-  parent_single:
-    self.'add_parent'(parentclass, 'to'=>parrotclass)
-    goto parent_done
-  parent_string:
-    $S0 = parentclass
-    parentclass = split ' ', $S0
-  parent_array:
-    .local pmc iter, item
-    iter = new 'Iterator', parentclass
-  parent_loop:
-    unless iter goto parent_done
-    item = shift iter
-    $S0 = item
-    $P0 = split ';', $S0
-    $I0 = elements $P0
-    eq $I0, 1, no_parent_hll
-    $S0 = shift $P0
-    goto have_parent_hll
-  no_parent_hll:
-    $S0 = hll
-  have_parent_hll:
-    $P0 = shift $P0
-    $S1 = $P0
-    $P0 = split '::', $S1
-    unshift $P0, $S0
-    $S0 = pop $P0
-    item = get_root_global $P0, $S0
-    self.'add_parent'(item, 'to'=>parrotclass)
-    goto parent_loop
-  parent_done:
-}}}
-
-Here's some code that I think does the same thing, written in Close. See if you can guess what _this_ does:
-{{{
-    if (parentclass) {
-        if (isa parentclass, 'P6protoobject') {
-            self.add_parent(parentclass, to: parrotclass);
-        }
-        else if (typeof parentclass == 'String' || does parentclass, 'array') {
-            if (typeof parentclass == 'String') {
-                parentclass = split ' ', parentclass;
+            if (isnull value) {
+                return default;
             }
 
-            foreach (pmc item: parentclass) {
-                pmc namespace = split ';', item;
-                pmc temp_hll = elements namespace == 1 ? hll : shift namespace;
-            
-                namespace = split '::', shift namespace;
-                unshift namespace, temp_hll;
-
-                str name = pop namespace;
-                self.add_parent((get_root_global namespace, name), to: parrotclass);
-            }
+            return value;
         }
-        else { # Not proto object, but also not array or string.
-            self.add_parent(parentclass, to: parrotclass);
-        }            
     }
+
+    # ...
+}
 }}}
 
-The astute reader will notice that the line counts of PIR code and Close code are very similar. Close is not intended as an extremely high level language. Instead, Close is intended as a high-level assembler. (In fact, the working title for Close was 'hlasm'.) This is very much like C: if you understand the underlying machine architecture, it isn't very hard to intuit the sequence of machine opcodes that a particular C statement will generate.
+== Real world code example ==
 
-In a similar vein, Close is intended to model PIR, but with control structures that are more familiar to most programmers. The builtin functions map directly to PIR opcodes, except where those opcodes can better be modeled by grammar (if statements, loops, goto).
+The first milestone in Close development was to be able to re-implement the file ~/compilers/pct/src/PCT/Node.pir shipped with Parrot. The above lines are from the top of the Node.c= that implements the same functionality.
+ 
+You will note that unlike C, there are classes in Close. And namespaces. And the interaction between classes and namespaces is defined by Parrot, so it may not be intuitive to you if you are familiar with e.g., Java, C#, or C++. We'll come back to that later.
+
+=== Function definition ===
+
+The function being defined is called 'attr' and it takes four arguments: `attrname`, `value`, `has_value`, and `default`. The `attrname` is a `str` -- a string -- and thus is suitable for storing in a PVM 'S' register. The `value` is a `pmc` -- an object reference. The boolean `has_value` is an `int` -- a tradition that extends even to Parrot opcodes -- and so could be stored in an 'I' register. And the `default` parameter is another PMC, providing a value to be used if none is stored.
+ 
+In addition, the `attr` function is also declared to be a _method_ by the `:method` _adverb._ Adverbial modifiers follow the expression or declaration they modify, and are indicated with a leading colon(':') character.
+ 
+A function that is a method will have an additional, implicit, parameter referred to as `self.` The `self` parameter is a reference to the current object, much like `this` in C++ or Java.
+
+Finally, the `attr` method returns a PMC. As in C, the return type is at the beginning of the declaration, along with any storage class (such as 'extern') or type qualifiers (such as 'const' or 'inline').
+
+
+=== Function body ===
+
+Within the function body, things are much as they would be in a C program, with two exceptions: 
+
+  * The `self` variable is accessed as though it were a Hash, using the postfix '[ ]' operator and a string index. This may be confusing for C programmers, because `self` was not declared anywhere, and the class declaration at the top has no indicator of any Hash or Array heritage. All true. But a Capture has Hash-like behavior, so deal with it.
+
+  * The `isnull` keyword is a built-in unary operator. It results in a similar 'isnull' opcode being generated in the resulting compiled bytecode. You can find a long list of the various PVM opcodes, along with their representation in Close, in the file $CLOSE/src/parser/builtins.pg.
+
+In general, the PVM opcodes are broken into four distinct categories. Eventually, there should only be three categories.
+  # Opcodes that are represented as syntax elements. These include if, goto, call/return, etc. 
+  # Opcodes that you don't need to call. (You can still do if from inline assembly, but this is a short list, and you don't need 'em.)
+  # Opcodes that are provides as builtin operators, like `isnull` above.
+  # Opcodes that I haven't got around to, yet. (Hey! We're at release 0.1 here.)
+
+== Variables and arithmetic expressions ==
+
+== PMC types ==
+
+== Functions == 
+
+== Arguments ==
+
+== External symbols and scope ==
