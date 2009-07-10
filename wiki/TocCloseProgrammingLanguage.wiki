@@ -1,0 +1,3 @@
+#summary Sidebar TOC for the docs
+
+<wiki:toc />
