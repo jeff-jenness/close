@@ -1,5 +1,4 @@
 #summary Introduction to Close programming
-#labels Featured
 #sidebar TocCloseProgrammingLanguage
 <wiki:toc />
 
@@ -80,6 +79,73 @@ In general, the PVM opcodes are broken into four distinct categories. Eventually
   # Opcodes that you don't need to call. (You can still do if from inline assembly, but this is a short list, and you don't need 'em.)
   # Opcodes that are provides as builtin operators, like `isnull` above.
   # Opcodes that I haven't got around to, yet. (Hey! We're at release 0.1 here.)
+
+== The structure of Close code ==
+
+A Close file -- called a _compilation unit_ -- is composed of directives, declarations and statements. A _directive_ is a note to the compiler about something happening in the code -- a `hll` or `namespace` block, for example. A _declaration_ is one or more lines of code that declares a variable, function, or class. And a _statement_ is executable code that causes some action to occur.
+
+=== Directives ===
+
+The most obvious directives used in Close are the `hll` and `namespace` directives. These tell the compiler to change the default HLL or namespace, respectively, used when creating global symbols. (A global symbol is a function, class, or a global variable.)
+
+Close programs default to compiling in the `close` HLL, in the root namespace. That is,
+a function declaration like this
+{{{
+   void main() {
+      say("Hello, world!");
+   }
+}}}
+
+will be compiled into PIR that looks like this.
+{{{
+.HLL "close"
+
+.namespace []
+
+.sub "main"
+    $P29 = "say"("Hello, world!")
+    .return ($P29)
+.end
+}}}
+
+(Some details have been removed for clarity.) Notice that the Close compiler automatically generates a `.HLL` directive indicating that the function is part of the `close` HLL. And notice that the default namespace is the empty (root) namespace of the close HLL.
+ 
+Each Close compilation unit starts in the default HLL: `close` and in the default namespace: `[].` 
+
+==== The `hll` directive ====
+ 
+The `hll` directive resets the default HLL used in generated code. It can be used in two forms. The "statement form" resets the HLL from the current position until the end of the compilation unit, or until another hll directive appears. A statement form directive looks like
+{{{
+hll Cobol;
+
+int x;        # x is in Cobol HLL
+int f() {     # f is also in Cobol HLL
+   return x; 
+}
+}}}
+
+Or, you may wish to use the "block form" of the directive. A block form directive includes a set of curly braces ('{ }') to indicate where the specified HLL applies.
+{{{
+hll Pascal { 
+   int a;     # a is in Pascal HLL
+}
+
+int g() {     # g is NOT in Pascal HLL
+   return a;
+}
+
+==== The `namespace` directive ====
+
+The `namespace` directive works in an analogous fashion to the `hll` directive. You can use either a statement form or a block form, and it resets the namespace in which new symbols are allocated.
+{{{
+namespace Foo;
+
+int a;
+
+namespace Other::Namespace {
+   int b;
+}
+}}}
 
 == Variables and arithmetic expressions ==
 
