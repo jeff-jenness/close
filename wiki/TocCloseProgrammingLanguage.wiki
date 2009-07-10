@@ -1,3 +1,4 @@
 #summary Sidebar TOC for the docs
 
   * [CloseIntro#Preface Preface]
+  * [CloseIntro#Introduction]
