@@ -1,5 +1,6 @@
 #summary Introduction to Close programming
 #labels Featured
+#sidebar TocCloseProgrammingLanguage
 <wiki:toc />
 
 = Preface = 
