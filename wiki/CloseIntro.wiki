@@ -133,6 +133,7 @@ hll Pascal {
 int g() {     # g is NOT in Pascal HLL
    return a;
 }
+}}}
 
 ==== The `namespace` directive ====
 
