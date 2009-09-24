@@ -1,0 +1,19 @@
+#summary "Close in a Nutshell" chapter 02
+
+= Language Basics =
+
+== Characteristics of Close ==
+
+-- modeled on C & C++
+
+== Structure of Close Programs
+
+== Source Files ==
+
+== Comments ==
+
+== Character Sets ==
+
+== Identifiers ==
+
+== How the Close Compiler Works ==
