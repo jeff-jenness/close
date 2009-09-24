@@ -1,4 +1,5 @@
-#summary If there was a Nutshell book, this is what it would say
+#summary "Close in a Nutshell", chapter 00
+#labels Close-in-a-Nutshell
 
 Table of Contents for "Close in a Nutshell."
 
