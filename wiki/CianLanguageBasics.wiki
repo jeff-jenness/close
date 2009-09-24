@@ -6,7 +6,7 @@
 
 -- modeled on C & C++
 
-== Structure of Close Programs
+== Structure of Close Programs ==
 
 == Source Files ==
 
