@@ -1,3 +1,5 @@
+#summary "Close in a Nutshell" Introduction
+
 = Introduction =
 ==	Parrot VM ==
 ==	Parrot Memory Model ==
