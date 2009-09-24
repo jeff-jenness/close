@@ -70,7 +70,36 @@ There are PMCs for a lot of things, including some things that there probably sh
 
 ===		Namespaces ===
 
+Namespaces are a way of partitioning your code and data so that your symbols -- function and variable names -- do not conflict with the symbols used by other authors. Nearly all recently-developed programming languages provide some kind of namespace analogue. Java calls them packages, C++ has namespaces, Perl has packages, etc.
 
+Namespaces in Parrot form a graph. Technically, it should be a tree, but there's a Namespace PMC and an API of methods for accessing and creating namespaces, so who knows what might happen? But in practice, and for our purposes, namespaces are a tree. 
+
+Parrot mandates that the top level of namespaces are for the use of the HLLs - the programming languages that generate code. Thus a package called A written in Perl will be in the $root/perl/A namespace, while a package A written in Ruby would be in the $root/ruby/A namespace. Of course, Perl for Parrot is called Rakudo, and Ruby for Parrot is called Cardinal, but you get the idea.
+ 
+What is important, from a Close perspective, are two things. First, _everything_ is in a namespace. If you don't specify a namespace, one is provided for you. And that applies to all code, no matter who generated it. Code written in PIR goes into the $root/parrot namespace by default. Code written in Close goes into the $root/close namespace by default.
+ 
+Second, is that Close gives you control over what namespace, and what HLL, your code is a part of. Part of the syntax of the language allows for specifying whatever HLL or namespace you want. Of course, the _syntax_ is still close, but the resulting functions or data will be emitted in whatever namespace you specify.
+{{{
+namespace hll: c :: {
+    String strcpy(String dest, String src) {
+        dest = src;   // What? They're pmcs - of course this works!
+    }
+}
+}}}
+In the example above, the 'strcpy' function would be compiled into the HLL root namespace of the 'c' HLL.
+{{{
+.HLL 'c'
+.namespace []
+.sub 'strcpy'
+    .param pmc dest
+    .param pmc src
+
+    assign dest, src
+
+    .return (dest)
+.end
+}}}
+This PIR code looks nothing like what would be generated (generated code is always full of generated names and temporary numbers) but conveys roughly what Close will produce.
 
 ===		Package Scope ===
 ===		Lexical variables ===
