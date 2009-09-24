@@ -1,14 +1,79 @@
 #summary "Close in a Nutshell" Introduction
 
 = Introduction =
+
+Close is a systems programming language for the Parrot Virtual Machine. 
+
+If you are willing to work pretty hard at figuring things out, that sentence tells you everything you need to know about Close, and whether you want to learn it. If you're still not sure, well, that's what the rest of this e-book is all about. 
+
+To start with, Close is a "systems programming" language -- the kind of programming sometimes described as "close to the metal." The aim of Close is to write libraries, weird startup routines, and performance-intensive software, _without_ having to write in PIR (see below). A secondary goal of Close is to look like C or C++ whenever possible, to make it easy for programmers to start using Close.
+
+Close would not exist without, and has no meaning outside of, the Parrot Virtual Machine. You can find out more about Parrot below, as it relates to Close. Or you can find out a _lot_ more about Parrot at the official Parrot website: www.parrot.org. No compilers for Close exist outside of the Parrot VM, and none are intended -- most other platforms already have a low-level, high-performance systems programming language, called 'C'.
+
+Close is a systems programming language for the Parrot Virtual Machine. 
+
+If you're still interested, read on.
+
+==	Why Close? ==
+
+"Why Close?" is actually two questions in one. The easiest one to answer is "Why did you pick the name 'Close'?" The name came out in a phone conversation -- I was describing the language to a friend of mine, and I said, "It's not 'C', but it's ... close." The fact that it's aimed at programming "close to the machine" just seals the deal.
+
+The second question is "Why should I use Close?" This is a subjective question -- your opinion may differ from mine. But my stock answer is, "because the alternative is programming in PIR (assembly)."
+
+Close is intended to provide the same service to Parrot users that C provides to other programmers -- provide a language that abstracts much of the machine details, but enables access to as many of the machine's capabilities as is feasible. Close is not intended to compete with Perl, but rather with PIR (the Parrot assembly language).
+
+==	Close 'gotcha's ==
+
+There are three different kinds of potential "gotchas" in Close programming. 
+
+  * Differences between the behavior of Close and of C. 
+
+    Close is based on C, but some things are inevitably different. For example, you cannot take the address of a variable. (If you really know C, and you think about it for a moment, you'll understand just exactly how much has to be different because of this. That's why it's "Close" and not "C for Parrot".)
+
+    When the behavior of Close differs from C or C++ in a _surprising_ way, those gotcha's will be identified in the text.
+
+  * Differences between Close and PIR.
+
+    These break down into a couple of categories. I generally don't worry about "not implemented." That's not a gotcha, it's either a scheduling issue or a deliberate design decision on my part.
+
+    But there are times when the behavior of Close will *not* be the same as the behavior of PIR. Those gotcha's will be indicated in the text.
+
+  * Differences between Parrot and the C hardware model.
+
+    As discussed below, C assumes a certain hardware model. That model is significantly different from the Parrot VM. (For example, no taking the address of a variable!) When this causes surprising behavior in Close, those gotcha's will be indicated in the text.
+
 ==	Parrot VM ==
-==	Parrot Memory Model ==
+
+The Parrot Virtual Machine is a VM aimed at supporting dynamic languages like Perl 6 and Python. You can find out about Parrot at www.parrot.org.
+
+==	Parrot Hardware Model ==
+
+Parrot is aimed at dynamic languages, so the Parrot opcodes are targeted that way. This can be surprising if your background is 'vanilla' C or C++. Most C programmers will never have seen a _closure,_ whereas Parrot has a dedicated opcode for creating new closures.
+
+===		Registers ===
+
+To start simply, Parrot is a register-based architecture, just like most modern CPU's. And Parrot has registers of different types, just like a CPU. Parrot has an infinite number of registers, though. And the types are a little unusual.
+
+Parrot's register types are: `integer, numeric, string, and pmc.` Integer registers are what you may already be used to in a CPU - they store numbers, and can increment, decrement, add, subtract, etc. Numeric registers store floating-point numbers, and just like on every other CPU, nobody pays much attention to them.
+
+String registers store strings. But that's all. On a conventional CPU, the 'string registers' are special pointer registers that are still fundamentally integers. On Parrot, the string registers point to strings. And strings are a special data type, not C strings, so you can't just point into the middle of one. In fact, you can't do any kind of arithmetic on a string pointer, except checking for equality and null. (IMO, Parrot's strings are poorly thought out. They're not super-low-level enough for speed, and they're not high-level enough for HLL-fu.)
+
+PMC registers are like string registers - they store PMC's, and that's all they do. You can assign them - called binding, for reasons which will become clear later, do simple tests on them, or use opcodes that invoke vtable functions or named methods. And that's it.
+
+===		PMCs ===
+
+_What's a PMC?_ you ask. Well, a PMC is whatever you make of it. Back in the day, when Parrot was young and the development team was optimistic, PMC stood for "Parrot Magic Cookie." Basically, a PMC is a pointer to an object - any kind of object. It's a "magic cookie" because you pass around the PMC, which identifies the object, but there's no guarantee that the PMC is a pointer. It could be an array index, a cryptographic signature, a string key into a database. But it doesn't matter, because you never actually look at the innards of the thing. You just put it into a register and then tell it, via operations performed on the register, to do things. "Increment yourself by one," or "append this other value to the list you are keeping."
+
+In short, PMCs are objects. Or object-handles. Whatever. They're how nearly all of the "high level" work gets done on the Parrot platform. You don't write code that says "Increment the index and store this into the array that we're using as a stack." Instead, you create a ResizeablePMCArray object (PMC), and invoke the .push() opcode on it. Presto, a stack!
+
+There are PMCs for a lot of things, including some things that there probably shouldn't be PMCs for. There are file handle PMCs, resizable array PMCs, really-big-number PMCs, network socket PMCs. If you need something done, there's probably a PMC for it. If there's not, well, there's an API for writing new PMCs and a lot of help available on irc://irc.parrot.org/parrot.
+
 ===		Namespaces ===
+
+
+
 ===		Package Scope ===
 ===		Lexical variables ===
-===		Registers ===
 ===		Subroutines ===
 ==	PIR - Parrot Assembly ==
-==	Why Close? ==
-==	Close 'gotcha's ==
 	
