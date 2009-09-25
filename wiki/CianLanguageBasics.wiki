@@ -13,21 +13,21 @@ A _declaration_ can define one or more symbols. Each symbol declaration may incl
 A _statement_ can be used for control flow -- to decide which set of statements to execute next -- or it can be an _expression_ to evaluate in order to invoke a different function or compute a value. Statements can be gathered together in _blocks_, both to organize them and to make a collection of statements subject to the control of another statement.
 {{{
 #include <std/io>				// Declares print, say.
-#include <std/types>			// Declares Integer
+#include <std/types>				// Declares Integer
 
-using namespace std;			// Makes std:: names visible
+using namespace std;				// Makes std:: names visible
 
-void main() {			// Program starts at 'main'
+void main() {					// Program starts at 'main'
 
 	for (Integer count = 10; count != 0; --count) {
-		sing_verse(count);	// Not declared?
+		sing_verse(count);		// Not declared?
 	}
 }
 
 void sing_verse(lexical Integer count) {	// 'lexical' is a storage class
 	
-	String how_many() {		// Lexically nested function
-		if (count == 0) {	// 'count' from sing_verse
+	String how_many() {			// Lexically nested function
+		if (count == 0) {		// 'count' from sing_verse
 			return "No more";
 		}
 		else {
@@ -62,11 +62,15 @@ Close is built on Parrot, and Parrot supports a plethora of character sets. Acco
 
 == Comments ==
 
-Close takes its comment syntax directly from C. A single line can be commented out using two forward slashes ('//'), while a long block of text can be commented out by starting with a forward slash and asterisk ('/*') and ending with an asterisk and forward slash ('*/'). 
+Close takes its comment syntax directly from C. A single line can be commented out using two forward slashes ('//'), while a long block of text can be commented out by starting with a forward slash and asterisk ('/`*`') and ending with an asterisk and forward slash ('`*`/'). 
 {{{
 // This is a single line comment.
+// This is a different line, but also a comment.
+
 /* This is a "block" comment, that 
-    may span multiple lines.
+   may span multiple lines. Note that just like
+   in C & C++, if you include another /* in the comment,
+   it doesn't nest.  
     */
 }}}
 == Identifiers ==
@@ -77,10 +81,11 @@ Instead, Close differentiates between _declarators_ -- the initial specification
 
 To close the gap between declarators and identifiers, Close allows the specification of an _alias._
 {{{
-int x = 1;				// Common, but short, C name.
-	
-Integer NumberOfRetries = 3;	// Longer, mixed-case, name
+int x = 1;					// Common, but short, C name.
 
-namespace hll:rakudo :: 'Module++' {	// Note quotes around namespace name.
+Integer NumberOfRetries = 3;			// Longer, mixed-case, name
+
+namespace hll:rakudo :: 'Module++' {		// Note quotes around namespace name.
 	Integer '$Counter' alias Counter;	// Quoted  declarator plus alias.
+}
 }}}
