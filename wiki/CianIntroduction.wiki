@@ -102,7 +102,49 @@ In the example above, the 'strcpy' function would be compiled into the HLL root 
 This PIR code looks nothing like what would be generated (generated code is always full of generated names and temporary numbers) but conveys roughly what Close will produce.
 
 ===		Package Scope ===
+
+Parrot associates every "top level" object with a namespace. These top levels are namespaces, and they are simpler than you probably think. The easiest way to think of a namespace is as a Perl hash. When a function is loaded, or created, or somehow comes into being, it gets added to some namespace. If you happened to already have a namespace by that name, and there was stuff in it, the new function joins the stuff -- now you have *more* stuff. (If you have stuff with the same name, then there's a bunch of possible behaviors. Ignore this for now.)
+
+This is the 'global variable' context for Parrot. This is the context that _subs_ (Parrot's name for functions) exist in. In fact, a sub is just another global variable -- there is only one namespace for 'symbols'. This namespace is the 'package' scope, and once your code is loaded into the Parrot VM it can reference symbols by name in this scope, regardless of execution order. This is akin to 'extern' scope in C and C++.
+
+_*Gotcha:*_ (Hardware) There is no facility for providing an initial value for package scope values other than subs. As a result, _there are no global symbols other than subs._ While it is possible to store a "value" to a symbols at package scope, there is no way to define that symbol in the compiled bytecode. Instead, the symbol must be set up, and any initialization performed, at load time (for bytecode files) or compile time (for eval) using a special sub. Close does this automatically for initializers attached to `extern` objects.
+
 ===		Lexical variables ===
+
+Within a function, everything is manipulated using registers. This is the same as most CPU models. But Parrot provides some special support for 'lexical' variables. This support takes the form of special PMCs called LexPad and LexInfo that remember an association between particular register numbers and textual variable names.
+{{{
+    # ...
+    $P0 = find_lex 'foo'
+    # ...
+}}}
+This code does some surprising things. First, keep in mind that all lexical variables are PMCs. There are no lexical ints, or lexical strings. If you want to store an integer, it goes into an 'Integer' PMC. Same for any other register type. Parrot provides PMC versions of the "basic types," and these are the forms that HLL implementors are expected to use for their variables.
+
+Since PMCs are object _references,_ it's fine if two registers refer to the same object. When you use the `find_lex` opcode to refer to a pre-existing lexical variable, Parrot looks up the name, determines where that PMC is stored, and hands you a reference to it. When you use `store_lex` the reverse happens.
+
+This behavior immediately calls for a discussion of _closures._ Wikipedia has a pretty good article on the subject, and Simon Cozens wrote an even better [http://www.perl.com/pub/a/2002/05/29/closure.html practical article] on perl.com. Here's an excerpt, illustrating the tricky nature of the beast:
+{{{
+sub make_counter {
+    my $start = shift;
+    return sub { $start++ }
+}
+
+my $from_ten = make_counter(10);
+my $from_three = make_counter(3);
+
+print $from_ten->();       # 10
+print $from_ten->();       # 11
+print $from_three->();     # 3
+print $from_ten->();       # 12
+print $from_three->();     # 4
+}}}
+The key point is that Parrot supports this, using lexical variables, at the opcode level. _How_ Parrot supports this is black magic, but it means that your program's "call stack" might look like a tree, because some closure forces an earlier version of the stack to stay around in memory so that some lexical variables will stay available.
+
 ===		Subroutines ===
+
+Oh frabjous day! Subroutines are pretty much exactly what you expect. A subroutine is the only thing that can be loaded from disk. All Parrot code, data, etc., travels in subroutines. But you know this, from reading the sections above.
+
+Subroutines can have attributes attached to them using _adverbs._ The convention used in Perl6, and therefore used in PIR, and therefore used by Close, is that adverbs look like `:init` or maybe `:subid('foo')` if they need an argument. Each adverb is magickal, and causes your program to misbehave in unusual ways. They're documented later.
+
 ==	PIR - Parrot Assembly ==
-	
+
+Like all the parts of Parrot, PIR is documented at www.parrot.org. In fact, there's even an O'Reilly book on the subject. But the fact remains that Parrot Assembly is still Assembly, and there were some pretty good reasons given for moving away from assembly and towards high-level languages back in the 1960's. Those reasons are still valid. Which is yet another reason why Close exists.
