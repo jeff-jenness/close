@@ -1,0 +1,17 @@
+#summary "Close in a Nutshell" chapter 03
+
+= Declarations =
+
+== Declarations and Definitions ==
+
+== Scope ==
+
+== Name Lookup ==
+
+== Linkage ==
+
+== Type Declarations ==
+
+== Object Declarations ==
+
+== Namespaces ==

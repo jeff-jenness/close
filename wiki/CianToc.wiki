@@ -13,6 +13,8 @@ Note: All page names start with "Cian", so "Introduction" is "CianIntroduction,"
 
 [CianLiterals Literals]
 
+[CianDeclarations Declarations]
+
 [CianTypeConversions Type Conversions]
 
 [CianExpressionsAndOperators Expressions and Operators]

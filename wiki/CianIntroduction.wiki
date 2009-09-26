@@ -148,3 +148,9 @@ Subroutines can have attributes attached to them using _adverbs._ The convention
 ==	PIR - Parrot Assembly ==
 
 Like all the parts of Parrot, PIR is documented at www.parrot.org. In fact, there's even an O'Reilly book on the subject. But the fact remains that Parrot Assembly is still Assembly, and there were some pretty good reasons given for moving away from assembly and towards high-level languages back in the 1960's. Those reasons are still valid. Which is yet another reason why Close exists.
+
+-----
+
+<table>
+</table>
+|| [CianToc Previous: Contents] || &nbsp; || [CianLanguageBasics Next: Language Basics] ||
