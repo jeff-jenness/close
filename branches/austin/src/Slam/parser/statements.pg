@@ -1,0 +1,134 @@
+# $Id$
+
+=VERSION 
+
+$Rev$
+
+=cut
+
+rule compound_statement {
+	'{'			{*} #= open
+	~ '}' <statements=local_statement>*
+				{*} #= close
+}
+
+rule conditional_statement {
+	$<kw>=[ 'if' | 'unless' ]
+	'(' ~ ')' <expression>
+	$<then>=<local_statement>
+	[ 'else' $<else>=<local_statement> ]?
+	{*}
+}
+
+rule declaration_statement {
+	| <namespace_alias_declaration> ';'	{*} #= namespace_alias_declaration
+	| <using_namespace_directive> ';'		{*} #= using_namespace_directive
+	| <using_declaration> ';'			{*} #= using_declaration
+	| <symbol_declaration_list>		{*} #= symbol_declaration_list
+}
+
+rule do_while_statement {
+	<.DO> <local_statement>
+	$<kw>=[ <WHILE> | <UNTIL> ]
+	[ '(' || <panic: "do...while/until statements must have '(' ')' around test expression" > ]
+	<expression>
+	[ ')' || <panic: "missing ')' at end of test expression" > ]
+	[ ';' || <panic: "Missing ';' at end of do...while/until statement" > ]
+	{*}
+}
+
+=head4 Expression Statement
+
+Expression statement represent most of your programs. Any expression, defined above, followed by a
+semi-colon[;] is an expression statement.
+
+=cut
+
+rule expression_statement {
+	<expression>
+	[ ';' || <panic: "Missing ';' at end of expression statement" > ]
+	{*}
+}
+
+# foreach (int x in array) say("# ", x);
+# string x; foreach (x in hash) say(x, " => ", hash[x]);
+
+rule foreach_header {
+	# NB: Try declaration first, to avoid typedef/expression problem.
+	[ <loop_var=parameter_declaration> || <loop_var=simple_identifier> ]
+	<.IN>
+	<list=expression>
+}
+
+rule foreach_statement {
+	<.FOREACH>		{*} #= open
+	'(' ~ ')' <header=foreach_header>
+	<body=local_statement>	{*} #= close
+}
+
+rule goto_statement {
+	<.GOTO> ~ ';' <label=BAREWORD> 
+	{*}
+}
+
+rule jump_statement {
+	| 'tailcall' <retval=postfix_expr> 
+		[ ';' || <panic: "Missing ';' at end of tailcall statement" > ]
+		{*} #= tailcall
+	# | continue [ <loop> ]? ';'         {*} #= continue
+	# | break [ <loop> ]? ';'             {*} #= break
+}
+
+rule label_declaration {
+	<label=label_name> <.SINGLE_COLON>
+	{*}
+}
+
+rule labeled_statement {
+	<labels=label_declaration>+
+	<statement=local_statement>
+	{*}
+}
+
+=rule local_statement
+
+A I<local_statement> is a statement that may appear in a local scope -- that is,
+inside a class or function declaration. The 'usual' coding statements are here,
+such as loops, goto, if/then/else, expressions, etc.
+
+=cut
+
+rule local_statement {
+	| <null_statement>		{*} #= null_statement
+	| <compound_statement>	{*} #= compound_statement
+	| <conditional_statement>	{*} #= conditional_statement
+	| <do_while_statement>	{*} #= do_while_statement
+	| <while_do_statement>	{*} #= while_do_statement
+	| <foreach_statement>	{*} #= foreach_statement
+	| <goto_statement>		{*} #= goto_statement
+	| <return_statement>	{*} #= return_statement
+	| <jump_statement>	{*} #= jump_statement
+	| <labeled_statement>	{*} #= labeled_statement
+	| <declaration_statement>	{*} #= declaration_statement
+	| <expression_statement>	{*} #= expression_statement
+}
+
+rule null_statement {
+	';'
+	{*}
+}
+
+rule return_statement {
+	<.RETURN> ~ ';'
+	<value=expression>?  
+	{*}
+}
+
+rule while_do_statement {
+	$<kw>=[ 'while' | 'until' ]
+	[ '(' || <panic: "while/until ... statements must have '(' ')' around test expression" > ]
+	<expression>
+	[ ')' || <panic: "missing ')' at end of test expression" > ]
+	<local_statement>
+	{*}
+}

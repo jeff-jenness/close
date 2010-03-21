@@ -1,0 +1,278 @@
+# $Id$
+
+#grammar Slam::Grammar is PGE::Grammar;
+
+=rule access_qualifier
+
+One of the access qualifiers C<const> or C<volatile>. This rule is used in both
+L<#type_specifier> and L<#declarator> matching.
+
+=cut
+
+rule access_qualifier {
+	| <token=CONST>		{*} #= CONST
+	| <token=VOLATILE>	{*} #= VOLATILE
+}
+
+=rule dclr_adverb
+
+Matches the adverbs that may modify a declarator.
+
+=cut
+
+rule dclr_adverb {
+	| <ADV_ANON>	{*} #= ADV_ANON
+	| <ADV_INIT>	{*} #= ADV_INIT
+	| <ADV_LOAD>	{*} #= ADV_LOAD
+	| <ADV_MAIN>	{*} #= ADV_MAIN
+	| <ADV_MULTI>	{*} #= ADV_MULTI
+	| <ADV_REG_CLASS> {*} #= ADV_REG_CLASS
+	| <ADV_VTABLE>	{*} #= ADV_VTABLE
+	
+	# | <token=ADV_METHOD> (handled by 'method' keyword?)
+}
+
+=rule dclr_alias
+
+Matches a declarator alias, as in C<extern int '$Line' alias line;>
+
+=cut
+
+rule dclr_alias {
+	<.ALIAS> <alias=new_alias_name> {*}
+}
+
+=rule dclr_array_or_hash
+
+Matches one of three possible syntaxes for declaring an array or hash. 
+
+=item # C<[ % ]>
+
+A hash is declared with a percent sign (the Perl hash sigil) inside brackets.
+
+=item # C<[ ]>
+
+A pair of empty brackets indicates an array of unspecified, indeterminate, or
+variable size.
+
+=item # C<[ expression ]>
+
+An expression inside brackets indicates an array of fixed size, determined by
+the value of expression at the time of initialization.
+
+=cut
+
+rule dclr_array_or_hash {
+	| $<hash>='%'		{*} #= hash
+	| <size=expression>?	{*} #= array
+}
+
+=rule dclr_atom
+
+Matches either a C<declarator_name> (as in 'extern int Foo::x', the 'Foo::x'
+part) or another C<declarator> nested in parentheses.
+
+=cut
+
+rule dclr_atom {
+	| :dba('nested declarator')
+	    '(' ~ ')' <declarator>	{*} #= declarator
+	| <declarator_name>	{*} #= declarator_name
+}
+
+=rule dclr_pointer
+
+Matches a star ('*') -- the Close "pointer to something" indicator -- optionally 
+followed by C<access_qualifier>s.
+
+=cut
+
+rule dclr_pointer {
+	$<token>='*' <access_qualifier>*	{*}
+}
+
+=rule dclr_postfix
+
+Matches either an array or hash declaration (C<decl[%]>), or a function's 
+parameter declaration list (C<decl(int a, string b)>) after a declarator.
+
+=cut
+
+rule dclr_postfix {
+	| :dba('function parameter list')
+	    '(' ~ ')' <parameter_list>		{*} #= parameter_list
+	| :dba('hash or array declaration')
+	    '[' ~ ']' <dclr_array_or_hash>	{*} #= dclr_array_or_hash
+}
+
+=rule declarator
+
+A declarator is that part of the declaration specific to a single name. The 
+declarator includes the symbol name, as well as any prefix indicating
+the symbol is a pointer, and any suffix indicating the symbol is a function,
+array, or hash.
+
+=cut
+
+rule declarator {
+	# * const	->	foo	-> (int x, string y)
+	<dclr_pointer>* <dclr_atom> <dclr_postfix>*
+	{*}
+}
+
+rule declarator_part {
+	<declarator>
+	<dclr_alias>?
+	<adverbs=dclr_adverb>*
+	{*} #= after_declarator
+	[ '=' <initializer=expression>
+		{*} #= initializer
+	|  <?before '{' >	
+		{*} #= block_open
+		<body=compound_statement>
+		{*} #= block_close
+	]?
+	{*} #= done
+}
+
+=rule namespace_alias_declaration
+
+Declares an alias for a namespace. 
+
+=cut
+
+rule namespace_alias_declaration {
+	<.NAMESPACE> <namespace_name> 
+	<.ALIAS> <alias=new_alias_name>
+	{*}
+}
+
+=rule param_adverb
+
+Matches the adverbs that may appear in a parameter declaration.
+
+=cut
+
+# :named('foo')
+rule param_adverb {
+	| <token=ADV_NAMED>		{*} #= ADV_NAMED
+	| <token=ADV_OPTIONAL>	{*} #= ADV_OPTIONAL
+	| <token=ADV_SLURPY>		{*} #= ADV_SLURPY
+}
+
+=rule parameter_declaration
+
+Matches a single parameter declaration, with optional trailing tokens.
+
+=cut
+
+rule parameter_declaration {
+	<specifier_list>
+	<parameter=declarator> 
+	[ <adverbs=param_adverb> ]*
+	<default=expression>?
+	{*}
+}
+
+rule parameter_list {
+	{*} #= open
+	[ <param_list=parameter_declaration> [ ',' | <?before ')'> ] ]*
+	{*} #= close
+}
+
+rule specifier_list {
+	<specs=tspec_not_type>*
+	<specs=tspec_type_specifier>
+	<specs=tspec_not_type>*
+	{*}
+}
+
+=token symbol_declaration_end
+
+Recognizes a semicolon (always), but matches no semicolon if the last
+item in a declaration was a block (function definition) element.
+
+=item * int x ; 	// semicolon
+
+=item * int foo() {...}	// no semicolon
+
+=item * int bar() {...}; // also valid
+
+=item * int x <ERROR> // missing semicolon error
+
+=cut
+
+token symbol_declaration_end {
+	[ ';'	# Match a semicolon
+	|| 	# or, match no semicolon if last decl ended with }
+		<?{{	
+			$P0 = get_hll_global [ 'Slam' ; 'Grammar' ], '$!Decl_block'
+			$I0 = $P0
+			.return ($I0)
+		}}>
+	|| 	# or, inject an error in the token stream.
+		<ERROR: "Missing semicolon(';') at end of declaration.">
+	]
+}
+
+# NB: If the whole typedef-declared-at-comma thing is needed, put
+# action calls at the comma here. (I hope not.)
+rule symbol_declaration_list {
+	<specifier_list> 
+	<symbol=declarator_part> 
+	[ ','  <symbol=declarator_part> ]*	
+	<.symbol_declaration_end>
+	{*}
+}
+
+rule tspec_basic_type {
+	<type=BASIC_TYPE>	{*}
+}
+
+rule tspec_builtin {
+	| <token=_BUILTIN>	{*}
+}
+
+rule tspec_function_attr {
+	| <token=INLINE>		{*}
+	| <token=METHOD>	{*}
+}
+
+rule tspec_not_type {
+	| <access_qualifier>		{*} #= access_qualifier
+	| <tspec_function_attr>	{*} #= tspec_function_attr
+	| <tspec_storage_class>	{*} #= tspec_storage_class
+}
+
+rule tspec_storage_class {
+	| <token=DYNAMIC>	{*}
+	| <token=EXTERN>		{*}
+	| <token=LEXICAL>		{*}
+	| <token=REGISTER>	{*}
+	| <token=STATIC>		{*}
+	| <token=TYPEDEF>	{*}
+}
+
+token tspec_type_name {
+	<type_name>		{*}
+}
+
+rule tspec_type_specifier {
+	| <tspec_builtin>		{*} #= tspec_builtin
+#	| <class_specifier>			{*} #= class_specifier
+#	| <enum_specifier>			{*} #= enum_specifier
+#	| <elaborated_type_specifier>	{*} #= elaborated_type_specifier
+#	| <typename_specifier>		{*} #= typename_specifier
+	# type-name is the only pattern that does not have a keyword.
+	| <tspec_type_name>		{*} #= tspec_type_name
+}
+
+rule using_namespace_directive {
+	<.USING> <.NAMESPACE> <namespace=namespace_path>
+	{*}
+}
+
+rule using_declaration {
+	<.USING> <qualified_identifier>
+	# FIXME: Add alias. (General alias rule needed.)
+}
