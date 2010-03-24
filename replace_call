@@ -1,0 +1,7 @@
+repl() {
+	perl -pi.pre -e "s/$1/$2/g;" $(lookfor -l "$1")
+}
+
+opp() {
+	repl "Opcode::$1" "Program::$1"
+}

@@ -2,33 +2,34 @@
 
 module Slam::Grammar::Actions;
 
-=method access_qualifier
+#~ =method access_qualifier
 
-Creates a type-specifier entry, to be attached to a declarator or specifier.
+#~ Creates a type-specifier entry, to be attached to a declarator or specifier.
 
-=cut
+#~ =cut
 
 method access_qualifier($/, $key)	{ PASSTHRU($/, $key); }
 
 method dclr_adverb($/, $key)	{ PASSTHRU($/, $key); }
 
-=method dclr_alias
+#~ =method dclr_alias
 
-Just another kind of declarator.
+#~ Just another kind of declarator.
 
-=cut
+#~ =cut
 
 method dclr_alias($/) {
 	my $past := Slam::Type::new_dclr_alias($<alias>.ast);
 	DUMP($past);
 	make $past;
 }
-=method dclr_array_or_hash
 
-Constructs an immediate token to represent the type-declarator,
-and attaches any attributes required (array #elements).
+#~ =method dclr_array_or_hash
 
-=cut
+#~ Constructs an immediate token to represent the type-declarator,
+#~ and attaches any attributes required (array #elements).
+
+#~ =cut
 
 method dclr_array_or_hash($/, $key) {
 	my $past;
@@ -52,12 +53,12 @@ method dclr_array_or_hash($/, $key) {
 
 method dclr_atom($/, $key) { PASSTHRU($/, $key); }
 	
-=method dclr_pointer
+#~ =method dclr_pointer
 
-Creates a token around the '*' in the pointer declarator, and attaches
-any qualifiers as children of the node.
+#~ Creates a token around the '*' in the pointer declarator, and attaches
+#~ any qualifiers as children of the node.
 
-=cut
+#~ =cut
 
 method dclr_pointer($/) {
 	NOTE("Creating pointer declarator");
@@ -68,11 +69,11 @@ method dclr_pointer($/) {
 	make $past;
 }
 
-=method dclr_postfix
+#~ =method dclr_postfix
 
-Passes through the array, hash, or function declarator.
+#~ Passes through the array, hash, or function declarator.
 
-=cut
+#~ =cut
 
 method dclr_postfix($/, $key) { PASSTHRU($/, $key); }
 
@@ -196,12 +197,12 @@ our %_decl_part;
 
 method declarator_part($/, $key) { self.DISPATCH($/, $key, %_decl_part); }
 
-=method namespace_alias_declaration
+#~ =method namespace_alias_declaration
 
-Edits the enclosing block of this node, creating an alias for the namespace
-name given.
+#~ Edits the enclosing block of this node, creating an alias for the namespace
+#~ name given.
 
-=cut
+#~ =cut
 
 method namespace_alias_declaration($/) {
 	my $ns_name := $<namespace>.ast;
@@ -217,18 +218,18 @@ method namespace_alias_declaration($/) {
 
 method param_adverb($/, $key)	{ PASSTHRU($/, $key); }
 
-=method parameter_declaration
+#~ =method parameter_declaration
 
-Matches the declaration of a I<single> declarator, with a limited set of 
-specifiers. When completed, pushes the declared symbol on to the current
-lexical scope. (Note that C<declarator_name> will add the name to the 
-scope's symbol table by default.) Returns a C<parameter_declaration> node, which is
-constructed from the C<declarator> node returned by the C<declarator_name> rule.
+#~ Matches the declaration of a I<single> declarator, with a limited set of 
+#~ specifiers. When completed, pushes the declared symbol on to the current
+#~ lexical scope. (Note that C<declarator_name> will add the name to the 
+#~ scope's symbol table by default.) Returns a C<parameter_declaration> node, which is
+#~ constructed from the C<declarator> node returned by the C<declarator_name> rule.
 
-Supports the adverbs appropriate to parameters, including C<named>, C<slurpy>,
-and C<optional>.
+#~ Supports the adverbs appropriate to parameters, including C<named>, C<slurpy>,
+#~ and C<optional>.
 
-=cut
+#~ =cut
 
 method parameter_declaration($/) {
 	NOTE("Assembling parameter_declaration");
@@ -255,13 +256,13 @@ method parameter_declaration($/) {
 	make $past;
 }
 
-=method parameter_list
+#~ =method parameter_list
 
-Creates a function-returning declarator, which is set as the PAST result of 
-the rule. The declarator contains a PAST::Block to represent the function's 
-parameter scope.
+#~ Creates a function-returning declarator, which is set as the PAST result of 
+#~ the rule. The declarator contains a PAST::Block to represent the function's 
+#~ parameter scope.
 
-=cut
+#~ =cut
 
 method _parameter_list_close($/) {
 	our $Symbols;
@@ -316,12 +317,12 @@ method specifier_list($/) {
 	MAKE($past);
 }
 
-=method symbol_declaration_list
+#~ =method symbol_declaration_list
 
-Attaches specifier_list to each symbol's declarator. Declares symbols
-within their respective scopes.
+#~ Attaches specifier_list to each symbol's declarator. Declares symbols
+#~ within their respective scopes.
 
-=cut
+#~ =cut
 
 method symbol_declaration_list($/) {
 	my $past	:= Slam::Statement::SymbolDeclarationList.new();
@@ -374,11 +375,11 @@ method tspec_builtin($/) {
 }
 
 
-=method tspec_function_attr
+#~ =method tspec_function_attr
 
-Creates a type specifier around the keyword.
+#~ Creates a type specifier around the keyword.
 
-=cut
+#~ =cut
 
 method tspec_function_attr($/) {
 	my $name := ~ $<token>;
@@ -394,11 +395,11 @@ method tspec_function_attr($/) {
 
 method tspec_not_type($/, $key) { PASSTHRU($/, $key); }
 
-=method tspec_storage_class
+#~ =method tspec_storage_class
 
-Creates a token around the keyword.
+#~ Creates a token around the keyword.
 
-=cut
+#~ =cut
 
 method tspec_storage_class($/) {
 	my $name := ~ $<token>;

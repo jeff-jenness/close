@@ -16,7 +16,7 @@ O             := @o@
 
 # Various paths
 PERL6GRAMMAR  := $(LIB_DIR)/library/PGE/Perl6Grammar.pbc
-#NQP           := $(LIB_DIR)/languages/nqp/nqp.pbc
+NQP           := $(LIB_DIR)/languages/nqp/nqp.pbc
 PCT           := $(LIB_DIR)/library/PCT.pbc
 PMC_DIR       := src/pmc
 OPS_DIR       := src/ops
@@ -33,439 +33,508 @@ RM_RF         := @rm_rf@
 POD2MAN       := pod2man
 #IF(parrot_is_shared and not(cygwin or win32)):export LD_RUN_PATH := @blib_dir@:$(LD_RUN_PATH)
 PARROT        := $(BIN_DIR)/parrot@exe@
-PARROT_NQP	:= $(BIN_DIR)/parrot_nqp@exe@
+PARROT_NQP	:= $(BIN_DIR)/parrot-nqp@exe@
+#PARROT_NQP	:= $(PARROT) $(NQP)
 PBC_TO_EXE    := $(BIN_DIR)/pbc_to_exe@exe@
 STRIP_PIRA	:= grep -v '^.annotate'
 #IF(darwin):
 #IF(darwin):# MACOSX_DEPLOYMENT_TARGET must be defined for OS X compilation/linking
 #IF(darwin):export MACOSX_DEPLOYMENT_TARGET := @osx_version@
-UPDATE_CLASSES := build/class_hierarchy.pl
 
-CLOSE_LIB_PIR := library/close/close_lib.pir
-CLOSE_LIB_PBC := library/close/close_lib.pbc
+COMMON_DEPS =			\
+	Makefile				\
+#	$(GEN)		
 
-ACTIONS_PM := \
-	src/Slam/parser/builtin_actions.nqp
+GEN := gen
 
-BUILTINS_PIR := \
-	src/builtins/grammar_utils.pir \
-	src/builtins/literals.pir \
-	src/builtins/load_bytecode.pir \
-	src/builtins/optable.pir \
-	src/builtins/say.pir \
-	src/builtins/strings.pir
+GRAMMAR_PG :=				\
 
-CLASS_DEPENDENT_SOURCES := \
-	src/Visitors/Combinators/All.nqp	\
-	src/Visitors/Combinators/Combinator.nqp
+#	src/Slam/parser/builtins.pg	\
+#	src/Slam/parser/declarations.pg	\
+#	src/Slam/parser/expressions.pg	\
+#	src/Slam/parser/names.pg	\
 
-COMPILER_LIBS_PIR := \
-	src/Slam/_INIT.pir				\
-	src/Slam/Adverbs.pir			\
-	src/Slam/IncludeFile.pir			\
-	src/Slam/Literal.pir				\
-	src/Slam/Lookups.pir			\
-	src/Slam/Messages.pir			\
-	src/Slam/Node.pir				\
-	src/Slam/Operators/Factory.pir		\
-	src/Slam/Operators/Operator.pir		\
-	src/Slam/Scopes/Function.pir		\
-	src/Slam/Scopes/Local.pir			\
-	src/Slam/Scopes/Namespace.pir		\
-	src/Slam/Scopes/NamespaceDefinition.pir \
-	src/Slam/Scopes/Parameter.pir		\
-	src/Slam/Scopes/Pervasive.pir		\
-	src/Slam/Scopes/Scope.pir			\
-	src/Slam/Statements.pir			\
-	src/Slam/SymbolTable.pir			\
-	src/Slam/Symbols/Declaration.pir		\
-	src/Slam/Symbols/Name.pir		\
-	src/Slam/Symbols/Namespace.pir		\
-	src/Slam/Symbols/Reference.pir		\
-	src/Slam/Types/Type.pir			\
-	src/Slam/Types/Declarator.pir		\
-	src/Slam/Types/Specifier.pir		\
-	src/Slam/Value.pir				\
-	src/Slam/Visitors/DeclarationCollectionVisitor.pir	\
-	src/Slam/Visitors/FunctionMarshalling.pir \
-	src/Slam/Visitors/Message.pir		\
-	src/Slam/Visitors/PastRewrite.pir		\
-	src/Slam/Visitors/PrettyPrint.pir		\
-	src/Slam/Visitors/ScopeAssignmentVisitor.pir	\
-	src/Slam/Visitors/ScopeTracker.pir	\
-	src/Slam/Visitors/SymbolResolution.pir	\
-	src/Slam/Visitors/TreeRewriteVisitor.pir	\
-	src/Slam/Visitors/TypeResolution.pir	\
-	src/Slam/Visitors/Visitor.pir		\
-	src/Visitors/Combinators/All.pir		\
-	src/Visitors/Combinators/Child.pir	\
-	src/Visitors/Combinators/Choice.pir	\
-	src/Visitors/Combinators/Combinator.pir	\
-	src/Visitors/Combinators/Composite.pir	\
-	src/Visitors/Combinators/Defined.pir	\
-	src/Visitors/Combinators/Factory.pir	\
-	src/Visitors/Combinators/Fail.pir		\
-	src/Visitors/Combinators/Forward.pir	\
-	src/Visitors/Combinators/Identity.pir	\
-	src/Visitors/Combinators/IfElse.pir	\
-	src/Visitors/Combinators/Sequence.pir	\
-	src/Visitors/Combinators/TopDown.pir	\
-	src/Visitors/Combinators/TopDownUntil.pir	\
-	src/Visitors/Combinators/VisitOnce.pir	\
-	src/Visitors/Visitable.pir			\
-	src/Visitors/Visitor.pir
+#	src/Slam/parser/grammar.pg	\
+#	src/Slam/parser/statements.pg	\
+#	src/Slam/parser/tokens.pg
 
-DOCS := README
 
-GRAMMARS_PG := \
-	src/Slam/parser/grammar.pg \
-	src/Slam/parser/builtins.pg \
-	src/Slam/parser/declarations.pg \
-	src/Slam/parser/expressions.pg \
-	src/Slam/parser/names.pg \
-	src/Slam/parser/statements.pg \
-	src/Slam/parser/tokens.pg
-
-LIBRARY_SRC := \
-	library/close/load.cl \
-	library/close/print.cl \
-	library/close/ok.cl \
-	library/close/string.cl
-
-GEN_SOURCES :=				\
-	src/gen_grammar.pir		\
-	src/gen_actions.pir			\
-	src/Slam/parser/grammar_actions.pir	\
-	src/Slam/parser/declaration_actions.pir	\
+ACTIONS_PIR :=					\
+	src/Slam/parser/builtin_actions.pir	\
+	src/Slam/parser/declaration_actions.pir \
 	src/Slam/parser/expression_actions.pir	\
+	src/Slam/parser/grammar_actions.pir	\
 	src/Slam/parser/name_actions.pir	\
-	src/Slam/parser/action_utils.pir		\
 	src/Slam/parser/statement_actions.pir	\
-	src/Slam/parser/token_actions.pir	\
-	src/gen_builtins.pir			\
-	src/gen_slam_lib.pir		\
-	src/gen_util_lib.pir
+	src/Slam/parser/token_actions.pir
+	
+SLAM_PIR := 					\
+	src/Slam/Compiler.pir			\
+	src/Slam/parser/Actions.pir		\
+	src/Slam/parser/Grammar.pir		\
+	$(ACTIONS_PIR)				\
+	
+#	$(GEN)/grammar.pir			\
+	
 
-SOURCES :=	\
-	$(GEN_SOURCES)	\
-	close.pir
+# Removed from SLAM_PIR because this loads the slam lib.
+#	src/Slam/Driver.pir	
 
-LANGUAGE_TESTS := "t/language/*.t"
-
-BUILD_CLEANUPS := \
-	close.pbc 			\
-	$(GEN_SOURCES) 		\
-	"src/*.pir"			\
-	"src/*.pira"			\
-	src/gen_grammar.pg	\
-	src/gen_actions.nqp		\
-	"src/Slam/*.pir"		\
-	"src/Slam/*.pira"		\
-	"src/Slam/Scopes/*.pir"	\
-	"src/Slam/Scopes/*.pira" 	\
-	"src/Slam/Types/*.pir"	\
-	"src/Slam/Types/*.pira"	\
-	"src/Slam/Visitors/*.pir"	\
-	"src/Slam/Visitors/*.pira"	\
-	"src/Slam/parser/*.pir"	\
-	"src/Slam/parser/*.pira"	\
-	close@exe@			\
-#IF(win32):  parrot-close.exe	\
-#IF(win32):  parrot-close.iss	\
-#IF(win32):  "setup-parrot-*.exe"	\
-	installable_close@exe@
-
-LIB_CLEANUPS := \
-	$(COMPILER_LIBS_PIR)	\
-	$(UTILITY_LIBS_PIR)
-
-TEST_CLEANUPS := \
-	"t/*.bak"			\
-	"t/*.c="			\
-	"t/*_[0-9].pir"		\
-	"t/*_[0-9][0-9].pir"		\
-	"t/language/*.bak"		\
-	"t/language/*.c="		\
-	"t/language/*_[0-9].pir"	\
-	"t/language/*_[0-9][0-9].pir"
-
-UTILITY_LIBS_PIR := \
-	src/Array.pir		\
-	src/Class.pir		\
-	src/Config.pir	\
-	src/Dumper.pir	\
-	src/File.pir		\
-	src/Hash.pir		\
-	src/OS.pir		\
-	src/Parrot.pir 	\
-	src/Registry.pir 	\
-	src/Slam/Config.pir	\
-	src/String.pir
-
-# the default target
-build: close.cfg close.pbc
-	@echo "Build complete"
-
-
-CLext := .c=
+##############################
 
 # NOTE: Using "old sk00l" implicit rules here because Microsoft's Nmake supports those.
 .SUFFIXES: .pg .nqp $(CLext) .pira .pir .pbc
 .PRECIOUS: .pir
 
+CLext := .c= 
+
 $(CLext).pira:
 	@echo "*** Compiling to PIRA: $<"
 	cl --target=pir --output=$@ $<
-
+ 
 .pg.pira:
 	@echo "*** Compiling to PIRA: $<"
 	$(PARROT) $(PARROT_ARGS) $(PERL6GRAMMAR) --output=$@ $<
-
+	#$(PARROT_NQP) --target=pir --output=$@ $<
+ 
 .nqp.pira: 
 	@echo "*** Compiling to PIRA: $<"
 	$(PARROT_NQP) --target=pir --output=$@  $<
-
+ 
 # $(PARROT) $(PARROT_ARGS) $(NQP) --target=pir --output=$@ $<
-
+ 
 .pira.pir:
 	@echo "*** Strip annotations PIRA->PIR: $<"
 	$(STRIP_PIRA) $< > $@
-
+ 
 .pira.pbc:
 	@echo "*** Compiling to PBC: $<"
 	$(PARROT) $(PARROT_ARGS) -o $@ $<
 
+##############################
 
-all: build close@exe@ installable
+all:	build
 
-CLASS_LIST = build/slam_classes
+build:	Makefile kakapo library/slam.pir library/Driver.pir
 
-classes: FORCE
-	$(PERL) ./build/class_hierarchy.pl --list > $(CLASS_LIST).new
-#IF(win32):	fc $(CLASS_LIST).new $(CLASS_LIST).txt >NUL \
-#IF(win32):	|| ( $(CP) $(CLASS_LIST).new $(CLASS_LIST).txt ) & \
-#IF(win32):	     $(PERL) $(UPDATE_CLASSES) $(CLASS_DEPENDENT_SOURCES) \
-#IF(win32):	)
-#IF(not(win32)):	if diff $(CLASS_LIST).new $(CLASS_LIST).txt > /dev/null; \
-#IF(not(win32)):	then echo "No changes to class hierarchy." ;		\
-#IF(not(win32)):	else $(CP) $(CLASS_LIST).new $(CLASS_LIST).txt ;	\
-#IF(not(win32)):	$(PERL) $(UPDATE_CLASSES) $(CLASS_DEPENDENT_SOURCES) ;\
-#IF(not(win32)):	fi
+kakapo: library/kakapo_full.pir
 
-FORCE:
+library/Driver.pir: src/Slam/Driver.pir
+	$(CP) $< $@
+	
+library/kakapo_full.pir: ../kakapo/library/kakapo_full.pir
+	$(CP) ../kakapo/library/k* library
 
-close.cfg:
-#IF(win32):	IF NOT EXIST close.cfg $(CP) close_cfg.tmpl close.cfg
-#IF(not(win32)):	if [ ! -f close.cfg ]; then $(CP) close_cfg.tmpl close.cfg ; fi
+library/slam.pir: $(SLAM_PIR) Makefile
+	@echo "*** Assembling $@ from component pirs"
+	$(CAT) $(SLAM_PIR) > $@
 
-close.pbc: $(SOURCES)
-	$(PARROT) $(PARROT_ARGS) -o close.pbc close.pir
-
-close@exe@: close.pbc
-	$(PBC_TO_EXE) close.pbc
-
-src/gen_actions.nqp: $(ACTIONS_PM) Makefile
-	@echo "**** Collecting gen_actions.nqp"
-	cat $(ACTIONS_PM) > src/gen_actions.nqp
-
-src/gen_builtins.pir: $(BUILTINS_PIR)
-	@echo "**** Collecting gen_builtins.pir"
-	$(CAT) $(BUILTINS_PIR) > src/gen_builtins.pir
-
-src/gen_grammar.pg: $(GRAMMARS_PG) Makefile
-	@echo "**** Collecting gen_grammar.pg"
-	$(CAT) $(GRAMMARS_PG) > src/gen_grammar.pg
-
-src/gen_slam_lib.pir: $(COMPILER_LIBS_PIR) Makefile
-	@echo "**** Assembling $@ from compiler libs"
-	@echo "Files: " $(COMPILER_LIBS_PIR)
-	$(CAT) $(COMPILER_LIBS_PIR) > $@
-
-src/gen_util_lib.pir: $(UTILITY_LIBS_PIR) Makefile
-	@echo "**** Assembling $@ from compiler libs"
-	@echo "Files: " $(UTILITY_LIBS_PIR)
-	$(CAT) $(UTILITY_LIBS_PIR) > $@
-
-$(CLOSE_LIB_PIR): $(LIBRARY_SRC)
-	$(PARROT) -r close.pbc --combine --target=pir --output=$(CLOSE_LIB_PIR) \
-		$(LIBRARY_SRC)
-
-$(CLOSE_LIB_PBC): $(CLOSE_LIB_PIR)
-	$(PARROT) --output=$(CLOSE_LIB_PBC) $(CLOSE_LIB_PIR)
-
-installable: installable_close@exe@
-
-installable_close@exe@: close.pbc
-	$(PBC_TO_EXE) close.pbc --install
-
+#$(GEN)/grammar.pg: $(GRAMMAR_PG) $(COMMON_DEPS)
+#	@echo "**** Collecting $@"
+#	$(CAT) $(GRAMMAR_PG) > $@
+ 
 Makefile: build/Makefile.in
 	$(PERL) Configure.pl
 
-# This is a listing of all targets, that are meant to be called by users
-help:
-	@echo ""
-	@echo "Following targets are available for the user:"
-	@echo ""
-	@echo "  build:             close.pbc"
-	@echo "                     This is the default."
-	@echo "  close@exe@      Self-hosting binary not to be installed."
-	@echo "  all:               close.pbc close@exe@ installable"
-	@echo "  installable:       Create libs and self-hosting binaries to be installed."
-	@echo "  install:           Install the installable targets and docs."
-	@echo ""
-	@echo "Testing:"
-	@echo "  test:              Run the test suite."
-	@echo "  test-installable:  Test self-hosting targets."
-	@echo "  testclean:         Clean up test results."
-	@echo ""
-	@echo "Cleaning:"
-	@echo "  clean:             Basic cleaning up."
-	@echo "  realclean:         Removes also files generated by 'Configure.pl'"
-	@echo "  distclean:         Removes also anything built, in theory"
-	@echo ""
-	@echo "Misc:"
-	@echo "  help:              Print this help message."
-	@echo ""
+test:	Makefile		\
+	test-compiler
 
-test: build test-language
-	#$(PERL) -I$(LIB_DIR)/tools/lib t/harness --bindir=$(BIN_DIR)
+test-compiler: build 
+	t/harness t/Slam
 
-test-language: build
-	prove $(LANGUAGE_TESTS)
+test1: build
+	$(PARROT_NQP) t/$(t)
+	
+## ############################################
+## It's all old below here.
 
-# basic run for missing libs
-test-installable: installable
-	echo "1" | ./installable_close@exe@
-
-install: installable
-#	$(MAKE) $(OPS_DIR) install
-#	$(MAKE) $(PMC_DIR) install
-	$(CP) installable_close@exe@ $(BIN_DIR)/parrot-close@exe@
-	$(CHMOD) 0755 $(BIN_DIR)/parrot-close@exe@
-	-$(MKPATH) $(LIB_DIR)/languages/close
-	$(CP) close.pbc $(LIB_DIR)/languages/close/close.pbc
-#	-$(MKPATH) $(MANDIR)/man1
-#	$(POD2MAN) doc/running.pod > $(MANDIR)/man1/parrot-close.1
-#	-$(MKPATH) $(DOC_DIR)/languages/close
-#	$(CP) $(DOCS) $(DOC_DIR)/languages/close
-
-uninstall:
-#	$(MAKE) $(OPS_DIR) uninstall
-#	$(MAKE) $(PMC_DIR) uninstall
-	$(RM_F) $(BIN_DIR)/parrot-close@exe@
-	$(RM_RF) $(LIB_DIR)/languages/close
-#	$(RM_F) $(MANDIR)/man1/parrot-close.1
-#	$(RM_RF) $(DOC_DIR)/languages/close
-
-win32-inno-installer: installable
-#	-$(MKPATH) man/man1
-#	$(POD2MAN) doc/running.pod > man/man1/parrot-close.1
-#	-$(MKPATH) man/html
-#	pod2html --infile doc/running.pod --outfile man/html/parrot-close.html
-	$(CP) installable_close@exe@ parrot-close.exe
-	$(PERL) -I$(LIB_DIR)/tools/lib $(LIB_DIR)/tools/dev/mk_inno_language.pl close
-	iscc parrot-close.iss
-
-testclean:
-	$(RM_F) $(TEST_CLEANUPS)
-
-clean:
-#	$(MAKE) $(OPS_DIR) clean
-#	$(MAKE) $(PMC_DIR) clean
-	$(RM_F) $(TEST_CLEANUPS) $(BUILD_CLEANUPS) $(LIB_CLEANUPS)
-
-realclean:
-#	$(MAKE) $(OPS_DIR) realclean
-#	$(MAKE) $(PMC_DIR) realclean
-	$(RM_F) $(TEST_CLEANUPS) $(BUILD_CLEANUPS) $(LIB_CLEANUPS) Makefile
-
-distclean: realclean
-
-POD2WIKI_DIR := ../../pod2wiki
-TRAC_PATH := /opt/trac/close
-
-doc2wiki:
-	$(RM_RF) $(POD2WIKI_DIR)
-	$(MKPATH)  $(POD2WIKI_DIR)
-	$(RM_F) $(POD2WIKI_DIR)/INDEX
-	( cd ../.. ; find docs -name '*.pod' ) > $(POD2WIKI_DIR)/INDEX
-	sed -e 's@^\(.*\)/.*@$(POD2WIKI_DIR)/\1@' $(POD2WIKI_DIR)/INDEX \
-		| sort -u \
-		| xargs $(MKPATH)
-	while read podfile ; do \
-		pod2wiki -s moinmoin "../../$$podfile" "$(POD2WIKI_DIR)/$$podfile"; \
-	done < $(POD2WIKI_DIR)/INDEX
-	cd $(POD2WIKI_DIR) ; \
-	while read wfile ; do \
-		sudo trac-admin "$(TRAC_PATH)" wiki import "$$wfile" "$$wfile" ; \
-	done < INDEX
-
-PCT_NODE_LIB_DIRS := \
-	-Llibrary/pct
-
-PCT_NODE_DIR := library/pct/PCT
-PCT_NODE_T_DIR := t/library/pct/PCT/Node
-PCTNODE_CLEAN_RM_FILES := $(PCT_NODE_DIR)/Node.pir
-
-TARGET := pir
-pctnode: build $(PCT_NODE_DIR)/Node.pir
-
-pctnode_test: pctnode
-	for tf in $$(find t/library/pct \( -name '.svn' -prune \) -o -name '*.t' -print ); \
-	do \
-		cl $(PCT_NODE_LIB_DIRS) --combine library/close/crt0.cl $$tf; \
-	done
-
-pctnode_clean:
-	$(RM_F) $(PCTNODE_CLEAN_RM_FILES)
-
-PAST_NODE_DIR := library/pct/PAST
-PAST_NODE_T_DIR := t/library/pct/PAST/Node
-PASTNODE_CLEAN_RM_FILES := $(PAST_NODE_DIR)/Node.pir
-pastnode: build $(PAST_NODE_DIR)/Node.pir
-
-pastnode_test: pastnode
-	for tf in $$(find $(PAST_NODE_T_DIR) \( -name '.svn' -prune \) -o -name '*.t' -print ); \
-	do \
-		cl $(PCT_NODE_LIB_DIRS) --combine library/close/crt0.cl $$tf; \
-	done
-
-pastnode_clean:
-	$(RM_F) $(PASTNODE_CLEAN_RM_FILES)
-
-POST_NODE_DIR := library/pct/POST
-POST_NODE_T_DIR := t/library/pct/POST/Node
-POSTNODE_CLEAN_RM_FILES := $(POST_NODE_DIR)/Node.pir
-postnode: build $(POST_NODE_DIR)/Node.pir
-
-postnode_test: postnode
-	for tf in $$(find $(POST_NODE_T_DIR) \( -name '.svn' -prune \) -o -name '*.t' -print ); \
-	do \
-		cl $(PCT_NODE_LIB_DIRS) --combine library/close/crt0.cl $$tf; \
-	done
-
-postnode_clean:
-	$(RM_F) $(POSTNODE_CLEAN_RM_FILES)
-
-pctlib: pctnode pastnode postnode
-
-pctlib_clean: pctnode_clean pastnode_clean
-
-HLL_CLOSE_PIR := \
-	 src/Namespace.pir
-HLL_CLOSE_CLEAN_RM_FILES := \
-	$(HLL_CLOSE_PIR)
-
-hll_close: $(HLL_CLOSE_PIR)
-
-hll_close_clean: 
-	$(RM_F) $(HLL_CLOSE_CLEAN_RM_FILES)
-
-TEST_LIBS := \
-	src/gen_util_lib.pir \
-	src/gen_builtins.pir \
-	src/Matcher.pir	\
-	src/Testcase.pir
-
-tvalues: $(TEST_LIBS) t/Slam/Values.pir src/Slam/Value.pir
-	$(PARROT) $(PARROT_ARGS) t/Slam/Values.pir
+## UPDATE_CLASSES := build/class_hierarchy.pl
+##  
+## CLOSE_LIB_PIR := library/close/close_lib.pir
+## CLOSE_LIB_PBC := library/close/close_lib.pbc
+##  
+## ACTIONS_PM := \
+## 	src/Slam/parser/builtin_actions.nqp
+##  
+## BUILTINS_PIR := \
+## 	src/builtins/grammar_utils.pir \
+## 	src/builtins/literals.pir \
+## 	src/builtins/load_bytecode.pir \
+## 	src/builtins/optable.pir \
+## 	src/builtins/say.pir \
+## 	src/builtins/strings.pir
+##  
+## CLASS_DEPENDENT_SOURCES := \
+## 	src/Visitors/Combinators/All.nqp	\
+## 	src/Visitors/Combinators/Combinator.nqp
+##  
+## COMPILER_LIBS_PIR := \
+## 	src/Slam/Driver.pir				\
+## 	
+## 	# src/Slam/_INIT.pir				\
+## 	# src/Slam/Adverbs.pir			\
+## 	# src/Slam/IncludeFile.pir			\
+## 	# src/Slam/Literal.pir				\
+## 	# src/Slam/Lookups.pir			\
+## 	# src/Slam/Messages.pir			\
+## 	# src/Slam/Node.pir				\
+## 	# src/Slam/Operators/Factory.pir		\
+## 	# src/Slam/Operators/Operator.pir		\
+## 	# src/Slam/Scopes/Function.pir		\
+## 	# src/Slam/Scopes/Local.pir			\
+## 	# src/Slam/Scopes/Namespace.pir		\
+## 	# src/Slam/Scopes/NamespaceDefinition.pir \
+## 	# src/Slam/Scopes/Parameter.pir		\
+## 	# src/Slam/Scopes/Pervasive.pir		\
+## 	# src/Slam/Scopes/Scope.pir			\
+## 	# src/Slam/Statements.pir			\
+## 	# src/Slam/SymbolTable.pir			\
+## 	# src/Slam/Symbols/Declaration.pir		\
+## 	# src/Slam/Symbols/Name.pir		\
+## 	# src/Slam/Symbols/Namespace.pir		\
+## 	# src/Slam/Symbols/Reference.pir		\
+## 	# src/Slam/Types/Type.pir			\
+## 	# src/Slam/Types/Declarator.pir		\
+## 	# src/Slam/Types/Specifier.pir		\
+## 	# src/Slam/Value.pir				\
+## 	# src/Slam/Visitors/DeclarationCollectionVisitor.pir	\
+## 	# src/Slam/Visitors/FunctionMarshalling.pir \
+## 	# src/Slam/Visitors/Message.pir		\
+## 	# src/Slam/Visitors/PastRewrite.pir		\
+## 	# src/Slam/Visitors/PrettyPrint.pir		\
+## 	# src/Slam/Visitors/ScopeAssignmentVisitor.pir	\
+## 	# src/Slam/Visitors/ScopeTracker.pir	\
+## 	# src/Slam/Visitors/SymbolResolution.pir	\
+## 	# src/Slam/Visitors/TreeRewriteVisitor.pir	\
+## 	# src/Slam/Visitors/TypeResolution.pir	\
+## 	# src/Slam/Visitors/Visitor.pir		\
+## 	# src/Visitors/Combinators/All.pir		\
+## 	# src/Visitors/Combinators/Child.pir	\
+## 	# src/Visitors/Combinators/Choice.pir	\
+## 	# src/Visitors/Combinators/Combinator.pir	\
+## 	# src/Visitors/Combinators/Composite.pir	\
+## 	# src/Visitors/Combinators/Defined.pir	\
+## 	# src/Visitors/Combinators/Factory.pir	\
+## 	# src/Visitors/Combinators/Fail.pir		\
+## 	# src/Visitors/Combinators/Forward.pir	\
+## 	# src/Visitors/Combinators/Identity.pir	\
+## 	# src/Visitors/Combinators/IfElse.pir	\
+## 	# src/Visitors/Combinators/Sequence.pir	\
+## 	# src/Visitors/Combinators/TopDown.pir	\
+## 	# src/Visitors/Combinators/TopDownUntil.pir	\
+## 	# src/Visitors/Combinators/VisitOnce.pir	\
+## 	# src/Visitors/Visitable.pir			\
+## 	# src/Visitors/Visitor.pir
+##  
+## DOCS := README
+##  
+## LIBRARY_SRC := \
+## 	library/close/load.cl \
+## 	library/close/print.cl \
+## 	library/close/ok.cl \
+## 	library/close/string.cl
+##  
+## GEN_SOURCES :=				\
+## 	src/gen_grammar.pir		\
+## 	src/gen_actions.pir			\
+## 	src/Slam/parser/grammar_actions.pir	\
+## 	src/Slam/parser/declaration_actions.pir	\
+## 	src/Slam/parser/expression_actions.pir	\
+## 	src/Slam/parser/name_actions.pir	\
+## 	src/Slam/parser/action_utils.pir		\
+## 	src/Slam/parser/statement_actions.pir	\
+## 	src/Slam/parser/token_actions.pir	\
+## 	src/gen_builtins.pir			\
+## 	src/gen_slam_lib.pir		\
+## 	src/gen_util_lib.pir
+##  
+## SOURCES :=	\
+## 	$(GEN_SOURCES)	\
+## 	close.pir
+##  
+## LANGUAGE_TESTS := "t/language/*.t"
+##  
+## BUILD_CLEANUPS := \
+## 	close.pbc 			\
+## 	$(GEN_SOURCES) 		\
+## 	"src/*.pir"			\
+## 	"src/*.pira"			\
+## 	src/gen_grammar.pg	\
+## 	src/gen_actions.nqp		\
+## 	"src/Slam/*.pir"		\
+## 	"src/Slam/*.pira"		\
+## 	"src/Slam/Scopes/*.pir"	\
+## 	"src/Slam/Scopes/*.pira" 	\
+## 	"src/Slam/Types/*.pir"	\
+## 	"src/Slam/Types/*.pira"	\
+## 	"src/Slam/Visitors/*.pir"	\
+## 	"src/Slam/Visitors/*.pira"	\
+## 	"src/Slam/parser/*.pir"	\
+## 	"src/Slam/parser/*.pira"	\
+## 	close@exe@			\
+## #IF(win32):  parrot-close.exe	\
+## #IF(win32):  parrot-close.iss	\
+## #IF(win32):  "setup-parrot-*.exe"	\
+## 	installable_close@exe@
+##  
+## LIB_CLEANUPS := \
+## 	$(COMPILER_LIBS_PIR)	\
+## 	$(UTILITY_LIBS_PIR)
+##  
+## TEST_CLEANUPS := \
+## 	"t/*.bak"			\
+## 	"t/*.c="			\
+## 	"t/*_[0-9].pir"		\
+## 	"t/*_[0-9][0-9].pir"		\
+## 	"t/language/*.bak"		\
+## 	"t/language/*.c="		\
+## 	"t/language/*_[0-9].pir"	\
+## 	"t/language/*_[0-9][0-9].pir"
+##  
+## UTILITY_LIBS_PIR := \
+## 	src/Registry.pir 	\
+## 	src/Slam/Config.pir	\
+## 	# src/Array.pir		\
+## 	# src/Class.pir		\
+## 	# src/Config.pir	\
+## 	# src/Dumper.pir	\
+## 	# src/File.pir		\
+## 	# src/Hash.pir		\
+## 	# src/OS.pir		\
+## 	# src/Parrot.pir 	\
+## 	# src/String.pir
+##  
+## # the default target
+## build: close.cfg close.pbc
+## 	@echo "Build complete"
+##  
+##  
+## CLext := .c=
+##  
+##  
+## all: build close@exe@ installable
+##  
+## CLASS_LIST = build/slam_classes
+##  
+## classes: FORCE
+## 	$(PERL) ./build/class_hierarchy.pl --list > $(CLASS_LIST).new
+## #IF(win32):	fc $(CLASS_LIST).new $(CLASS_LIST).txt >NUL \
+## #IF(win32):	|| ( $(CP) $(CLASS_LIST).new $(CLASS_LIST).txt ) & \
+## #IF(win32):	     $(PERL) $(UPDATE_CLASSES) $(CLASS_DEPENDENT_SOURCES) \
+## #IF(win32):	)
+## #IF(not(win32)):	if diff $(CLASS_LIST).new $(CLASS_LIST).txt > /dev/null; \
+## #IF(not(win32)):	then echo "No changes to class hierarchy." ;		\
+## #IF(not(win32)):	else $(CP) $(CLASS_LIST).new $(CLASS_LIST).txt ;	\
+## #IF(not(win32)):	$(PERL) $(UPDATE_CLASSES) $(CLASS_DEPENDENT_SOURCES) ;\
+## #IF(not(win32)):	fi
+##  
+## FORCE:
+##  
+## close.cfg:
+## #IF(win32):	IF NOT EXIST close.cfg $(CP) close_cfg.tmpl close.cfg
+## #IF(not(win32)):	if [ ! -f close.cfg ]; then $(CP) close_cfg.tmpl close.cfg ; fi
+##  
+## close.pbc: $(SOURCES)
+## 	$(PARROT) $(PARROT_ARGS) -o close.pbc close.pir
+##  
+## close@exe@: close.pbc
+## 	$(PBC_TO_EXE) close.pbc
+##  
+## src/gen_actions.nqp: $(ACTIONS_PM) Makefile
+## 	@echo "**** Collecting gen_actions.nqp"
+## 	cat $(ACTIONS_PM) > src/gen_actions.nqp
+##  
+## src/gen_builtins.pir: $(BUILTINS_PIR)
+## 	@echo "**** Collecting gen_builtins.pir"
+## 	$(CAT) $(BUILTINS_PIR) > src/gen_builtins.pir
+##  
+## src/gen_slam_lib.pir: $(COMPILER_LIBS_PIR) Makefile
+## 	@echo "**** Assembling $@ from compiler libs"
+## 	@echo "Files: " $(COMPILER_LIBS_PIR)
+## 	$(CAT) $(COMPILER_LIBS_PIR) > $@
+##  
+## src/gen_util_lib.pir: $(UTILITY_LIBS_PIR) Makefile
+## 	@echo "**** Assembling $@ from compiler libs"
+## 	@echo "Files: " $(UTILITY_LIBS_PIR)
+## 	$(CAT) $(UTILITY_LIBS_PIR) > $@
+##  
+## $(CLOSE_LIB_PIR): $(LIBRARY_SRC)
+## 	$(PARROT) -r close.pbc --combine --target=pir --output=$(CLOSE_LIB_PIR) \
+## 		$(LIBRARY_SRC)
+##  
+## $(CLOSE_LIB_PBC): $(CLOSE_LIB_PIR)
+## 	$(PARROT) --output=$(CLOSE_LIB_PBC) $(CLOSE_LIB_PIR)
+##  
+## installable: installable_close@exe@
+##  
+## installable_close@exe@: close.pbc
+## 	$(PBC_TO_EXE) close.pbc --install
+##  
+## # This is a listing of all targets, that are meant to be called by users
+## help:
+## 	@echo ""
+## 	@echo "Following targets are available for the user:"
+## 	@echo ""
+## 	@echo "  build:             close.pbc"
+## 	@echo "                     This is the default."
+## 	@echo "  close@exe@      Self-hosting binary not to be installed."
+## 	@echo "  all:               close.pbc close@exe@ installable"
+## 	@echo "  installable:       Create libs and self-hosting binaries to be installed."
+## 	@echo "  install:           Install the installable targets and docs."
+## 	@echo ""
+## 	@echo "Testing:"
+## 	@echo "  test:              Run the test suite."
+## 	@echo "  test-installable:  Test self-hosting targets."
+## 	@echo "  testclean:         Clean up test results."
+## 	@echo ""
+## 	@echo "Cleaning:"
+## 	@echo "  clean:             Basic cleaning up."
+## 	@echo "  realclean:         Removes also files generated by 'Configure.pl'"
+## 	@echo "  distclean:         Removes also anything built, in theory"
+## 	@echo ""
+## 	@echo "Misc:"
+## 	@echo "  help:              Print this help message."
+## 	@echo ""
+##  
+## test: build test-language
+## 	#$(PERL) -I$(LIB_DIR)/tools/lib t/harness --bindir=$(BIN_DIR)
+##  
+## test-language: build
+## 	prove $(LANGUAGE_TESTS)
+##  
+## # basic run for missing libs
+## test-installable: installable
+## 	echo "1" | ./installable_close@exe@
+##  
+## install: installable
+## #	$(MAKE) $(OPS_DIR) install
+## #	$(MAKE) $(PMC_DIR) install
+## 	$(CP) installable_close@exe@ $(BIN_DIR)/parrot-close@exe@
+## 	$(CHMOD) 0755 $(BIN_DIR)/parrot-close@exe@
+## 	-$(MKPATH) $(LIB_DIR)/languages/close
+## 	$(CP) close.pbc $(LIB_DIR)/languages/close/close.pbc
+## #	-$(MKPATH) $(MANDIR)/man1
+## #	$(POD2MAN) doc/running.pod > $(MANDIR)/man1/parrot-close.1
+## #	-$(MKPATH) $(DOC_DIR)/languages/close
+## #	$(CP) $(DOCS) $(DOC_DIR)/languages/close
+##  
+## uninstall:
+## #	$(MAKE) $(OPS_DIR) uninstall
+## #	$(MAKE) $(PMC_DIR) uninstall
+## 	$(RM_F) $(BIN_DIR)/parrot-close@exe@
+## 	$(RM_RF) $(LIB_DIR)/languages/close
+## #	$(RM_F) $(MANDIR)/man1/parrot-close.1
+## #	$(RM_RF) $(DOC_DIR)/languages/close
+##  
+## win32-inno-installer: installable
+## #	-$(MKPATH) man/man1
+## #	$(POD2MAN) doc/running.pod > man/man1/parrot-close.1
+## #	-$(MKPATH) man/html
+## #	pod2html --infile doc/running.pod --outfile man/html/parrot-close.html
+## 	$(CP) installable_close@exe@ parrot-close.exe
+## 	$(PERL) -I$(LIB_DIR)/tools/lib $(LIB_DIR)/tools/dev/mk_inno_language.pl close
+## 	iscc parrot-close.iss
+##  
+## testclean:
+## 	$(RM_F) $(TEST_CLEANUPS)
+##  
+## clean:
+## #	$(MAKE) $(OPS_DIR) clean
+## #	$(MAKE) $(PMC_DIR) clean
+## 	$(RM_F) $(TEST_CLEANUPS) $(BUILD_CLEANUPS) $(LIB_CLEANUPS)
+##  
+## realclean:
+## #	$(MAKE) $(OPS_DIR) realclean
+## #	$(MAKE) $(PMC_DIR) realclean
+## 	$(RM_F) $(TEST_CLEANUPS) $(BUILD_CLEANUPS) $(LIB_CLEANUPS) Makefile
+##  
+## distclean: realclean
+##  
+## POD2WIKI_DIR := ../../pod2wiki
+## TRAC_PATH := /opt/trac/close
+##  
+## doc2wiki:
+## 	$(RM_RF) $(POD2WIKI_DIR)
+## 	$(MKPATH)  $(POD2WIKI_DIR)
+## 	$(RM_F) $(POD2WIKI_DIR)/INDEX
+## 	( cd ../.. ; find docs -name '*.pod' ) > $(POD2WIKI_DIR)/INDEX
+## 	sed -e 's@^\(.*\)/.*@$(POD2WIKI_DIR)/\1@' $(POD2WIKI_DIR)/INDEX \
+## 		| sort -u \
+## 		| xargs $(MKPATH)
+## 	while read podfile ; do \
+## 		pod2wiki -s moinmoin "../../$$podfile" "$(POD2WIKI_DIR)/$$podfile"; \
+## 	done < $(POD2WIKI_DIR)/INDEX
+## 	cd $(POD2WIKI_DIR) ; \
+## 	while read wfile ; do \
+## 		sudo trac-admin "$(TRAC_PATH)" wiki import "$$wfile" "$$wfile" ; \
+## 	done < INDEX
+##   
+## PCT_NODE_LIB_DIRS := \
+## 	-Llibrary/pct
+##  
+## PCT_NODE_DIR := library/pct/PCT
+## PCT_NODE_T_DIR := t/library/pct/PCT/Node
+## PCTNODE_CLEAN_RM_FILES := $(PCT_NODE_DIR)/Node.pir
+##  
+## TARGET := pir
+## pctnode: build $(PCT_NODE_DIR)/Node.pir
+##  
+## pctnode_test: pctnode
+## 	for tf in $$(find t/library/pct \( -name '.svn' -prune \) -o -name '*.t' -print ); \
+## 	do \
+## 		cl $(PCT_NODE_LIB_DIRS) --combine library/close/crt0.cl $$tf; \
+## 	done
+##  
+## pctnode_clean:
+## 	$(RM_F) $(PCTNODE_CLEAN_RM_FILES)
+##  
+## PAST_NODE_DIR := library/pct/PAST
+## PAST_NODE_T_DIR := t/library/pct/PAST/Node
+## PASTNODE_CLEAN_RM_FILES := $(PAST_NODE_DIR)/Node.pir
+## pastnode: build $(PAST_NODE_DIR)/Node.pir
+##  
+## pastnode_test: pastnode
+## 	for tf in $$(find $(PAST_NODE_T_DIR) \( -name '.svn' -prune \) -o -name '*.t' -print ); \
+## 	do \
+## 		cl $(PCT_NODE_LIB_DIRS) --combine library/close/crt0.cl $$tf; \
+## 	done
+##  
+## pastnode_clean:
+## 	$(RM_F) $(PASTNODE_CLEAN_RM_FILES)
+##  
+## POST_NODE_DIR := library/pct/POST
+## POST_NODE_T_DIR := t/library/pct/POST/Node
+## POSTNODE_CLEAN_RM_FILES := $(POST_NODE_DIR)/Node.pir
+## postnode: build $(POST_NODE_DIR)/Node.pir
+##  
+## postnode_test: postnode
+## 	for tf in $$(find $(POST_NODE_T_DIR) \( -name '.svn' -prune \) -o -name '*.t' -print ); \
+## 	do \
+## 		cl $(PCT_NODE_LIB_DIRS) --combine library/close/crt0.cl $$tf; \
+## 	done
+##  
+## postnode_clean:
+## 	$(RM_F) $(POSTNODE_CLEAN_RM_FILES)
+##  
+## pctlib: pctnode pastnode postnode
+##  
+## pctlib_clean: pctnode_clean pastnode_clean
+##  
+## HLL_CLOSE_PIR := \
+## 	 src/Namespace.pir
+## HLL_CLOSE_CLEAN_RM_FILES := \
+## 	$(HLL_CLOSE_PIR)
+##  
+## hll_close: $(HLL_CLOSE_PIR)
+##   
+## hll_close_clean: 
+## 	$(RM_F) $(HLL_CLOSE_CLEAN_RM_FILES)
+##  
+## TEST_LIBS := \
+## 	src/gen_util_lib.pir \
+## 	src/gen_builtins.pir \
+## 	src/Matcher.pir	\
+## 	src/Testcase.pir
+##  
+## tvalues: $(TEST_LIBS) t/Slam/Values.pir src/Slam/Value.pir
+## 	$(PARROT) $(PARROT_ARGS) t/Slam/Values.pir

@@ -52,13 +52,13 @@ method TOP($/, $key) {
 
 method declarative_statement($/, $key) { PASSTHRU($/, $key); }
 
-=sub faketree($past)
+#~ =sub faketree($past)
 
-Replaces the generated tree with a fake one, if a config switch is set. Used 
-to test arbitrary PAST structures, either because I'm bug-hunting or to 
-understand how they work. Not a "real" part of the compiler in any way. 
+#~ Replaces the generated tree with a fake one, if a config switch is set. Used 
+#~ to test arbitrary PAST structures, either because I'm bug-hunting or to 
+#~ understand how they work. Not a "real" part of the compiler in any way. 
 
-=cut
+#~ =cut
 
 sub faketree($past) {
 	if Registry<CONFIG>.query('Compiler', 'faketree') {
@@ -84,12 +84,12 @@ sub faketree($past) {
 	return $past;
 }
 
-=method include_file
+#~ =method include_file
 
-Processes an included file. The compiled PAST subtree is used as the result of 
-this expression.
+#~ Processes an included file. The compiled PAST subtree is used as the result of 
+#~ this expression.
 
-=cut
+#~ =cut
 
 method include_directive($/) {
 	NOTE("Processing include file: ", ~ $<file>);

@@ -59,8 +59,8 @@ method builtin_exists($/) {
 		:name('builtin-exists'),
 		:node($/),
 		:pasttype('inline'),
-		:inline("\t$I0 = exists %0[%1]\n"
-			~ "\t%r = box $I0\n"));
+		:inline("\t$\I0 = exists %0[%1]\n"
+			~ "\t%r = box $\I0\n"));
 	
 	my $index := $<index>.ast;
 	
@@ -116,8 +116,8 @@ method builtin_isa($/) {
 	my $class := PAST::Op.new(
 		:node($<class>),
 		:pasttype('inline'),
-		:inline("\t$P0 = split '::', '" ~ $class_key ~ "'\n"
-			~ "\t%r = get_root_namespace $P0\n"));
+		:inline("\t$\P0 = split '::', '" ~ $class_key ~ "'\n"
+			~ "\t%r = get_root_namespace $\P0\n"));
 	$past.push($class);
 	#DUMPold($past);
 	make $past;
