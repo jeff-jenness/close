@@ -1,25 +1,25 @@
 # $Id$
 
-=config sub :like<item1> :formatted<C>
+#~ =config sub :like<item1> :formatted<C>
 
-=begin comments
+#~ =begin comments
 
-Slam::Grammar::Actions - ast transformations for close
+#~ Slam::Grammar::Actions - ast transformations for close
 
-This file contains the methods that are used by the parse grammar
-to build the PAST representation of an close program.
-Each method below corresponds to a rule in F<src/parser/grammar.pg>,
-and is invoked at the point where C<{*}> appears in the rule,
-with the current match object as the first argument.  If the
-line containing C<{*}> also has a C<#= key> comment, then the
-value of the comment is passed as the second argument to the method.
+#~ This file contains the methods that are used by the parse grammar
+#~ to build the PAST representation of an close program.
+#~ Each method below corresponds to a rule in F<src/parser/grammar.pg>,
+#~ and is invoked at the point where C<{*}> appears in the rule,
+#~ with the current match object as the first argument.  If the
+#~ line containing C<{*}> also has a C<#= key> comment, then the
+#~ value of the comment is passed as the second argument to the method.
 
-Note that the order of routines here should be the same as that of L<grammar.pg>,
-except that (1) some grammar rules have no corresponding method; and (2) any
-'extra' routines in this file come at the end, corresponding to the 'Implementation'
-pod section of the grammar.
+#~ Note that the order of routines here should be the same as that of L<grammar.pg>,
+#~ except that (1) some grammar rules have no corresponding method; and (2) any
+#~ 'extra' routines in this file come at the end, corresponding to the 'Implementation'
+#~ pod section of the grammar.
 
-=end comments
+#~ =end comments
 
 class Slam::Grammar::Actions;
 
@@ -61,12 +61,12 @@ sub PASSTHRU($/, $key, :$caller_level?) {
 
 ################################################################
 
-=sub ast_array($capture)
+#~ =sub ast_array($capture)
 
-Returns an array of the ast nodes associated with the elements of an array
-capture. (As with a <subrule>* or <subrule>+ match.)
+#~ Returns an array of the ast nodes associated with the elements of an array
+#~ capture. (As with a <subrule>* or <subrule>+ match.)
 
-=cut
+#~ =cut
 
 sub ast_array($capture) {
 	my @results := Array::empty();
@@ -79,13 +79,13 @@ sub ast_array($capture) {
 }
 
 		
-=sub void clean_up_heredoc($past, @lines)
+#~ =sub void clean_up_heredoc($past, @lines)
 
-Chops off leading whitespace, as determined by the final line. Concatenates all
-but the last line of C<@lines> and sets the C<value()> attribute of the C<$past>
-value. 
+#~ Chops off leading whitespace, as determined by the final line. Concatenates all
+#~ but the last line of C<@lines> and sets the C<value()> attribute of the C<$past>
+#~ value. 
 
-=cut
+#~ =cut
 
 sub clean_up_heredoc($past, @lines) {
 	my $closing	:= @lines.pop();
